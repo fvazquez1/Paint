@@ -16,6 +16,7 @@ New Features:
 Known Issues:
 -Save isn't overwriting the file in it's position, so "Save As..." must be used to save an image or drawing
 -About pop-up isn't very appealing to the eye
+-Need to click the "x" for the pop-up windows for both line color and line width in order for the selection to be saved
 
 Expected Next Sprint: 
 -Selecting and Drawing shapes on the canvas
@@ -24,7 +25,7 @@ Expected Next Sprint:
 
 Links:
 
-- Github: (Coming Soon)
+- Github: https://github.com/fvazquez1/Paint
 - Demo: (Coming Soon)
 ======================================================================================================================================
 Frankie's Paint Version 1.1 - 08/28/2020
