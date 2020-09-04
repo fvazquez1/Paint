@@ -1,0 +1,52 @@
+Frankie's Paint Version 2.0 - 09/04/2020
+
+New Features:
+
+-Menu Bar now has a "Help" and "Draw" option
+	-"Help" has an about that opens these release notes
+	-"Draw" has 3 options: (1)Draw Line, (2)Set Line Color, (3)Set Line Width
+		-Draw Line works as a toggle, so it must be clicked when before you can draw. After this, just click and drag to draw
+		-Set Line Color opens up a color chooser, and allows you to draw in your favorite color
+		-Set Line Width opens up a slider to adjust the width of your line when you draw 
+-Drawing on an image
+	-You can now draw on an image after you open it!
+	-Want to save your masterpiece? Just click "Save As..." once you're done drawing
+-Scroll Bar added 
+-"Save As..." automatically saves as a .png file
+Known Issues:
+-Save isn't overwriting the file in it's position, so "Save As..." must be used to save an image or drawing
+-About pop-up isn't very appealing to the eye
+
+Expected Next Sprint: 
+-Selecting and Drawing shapes on the canvas
+-Getting the "Save" button to work 
+-Beautify the "About" page
+
+Links:
+
+- Github: (Coming Soon)
+- Demo: (Coming Soon)
+======================================================================================================================================
+Frankie's Paint Version 1.1 - 08/28/2020
+
+New Features: 
+
+- Menu Bar with "File" option
+	- Open Image option available under "File"
+	- Save Image option available under "File"
+		- Automatically saves as a .png
+	- Clear Image option available under "File"
+- Window opens and closes nicely
+
+Known Issues: 
+
+- User seems to only be able to save the image as a .png file for now
+
+Expected Next Sprint:
+- Being able to automatically specify the file type when saving an image
+- Being able to open multiple images at once
+
+Links:
+
+- Github: (Coming Soon)
+- Demo: (Coming Soon)
