@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,6 +35,8 @@ public class Paint extends Application {
     public void start(Stage primaryStage) throws FileNotFoundException, IOException{
         //Creates the menu bar
         menuBar mb = new menuBar(primaryStage);
+        //Creates the tool bar
+        toolBar tb = new toolBar(primaryStage,mb.getImageView());
         //Creates scroll pane that will be used for the canvas
         ScrollPane scroll = new ScrollPane();
         
@@ -43,16 +46,26 @@ public class Paint extends Application {
         GridPane grid = new GridPane();
         StackPane stack = new StackPane();
         WritableImage wim = new WritableImage((int)mb.getImageView().getFitHeight(),(int)mb.getImageView().getFitWidth());
+        mb.setWim(wim);
+        tb.setWim(wim);
         
+        tb.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event){
+                mb.setWim(tb.getWim());
+                mb.setDrawnOn(tb.beenDrawnOn());
+            }
+        });
         // Sets up canvas 
-
         StackPane scrollStack = new StackPane();
-        stack.getChildren().addAll(mb.getImageView(),mb.getCanvas());
+        stack.getChildren().addAll(mb.getImageView(),tb.getCanvas());
         mb.setPane(stack);
+        tb.setPane(stack);
         scroll.setContent(stack);
         scrollStack.getChildren().add(scroll);
         //Adding menu bar and the canvas to the window
         grid.add(mb,0,0);
+        grid.addRow(1, tb);
         grid.add(scrollStack,0,2);
         // Displays the window with everything that has been created
         Scene scene = new Scene(grid, 1500, 900);

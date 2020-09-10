@@ -34,10 +34,12 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Line;
 import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 import javax.imageio.ImageIO;
 /**
  *
@@ -50,12 +52,13 @@ public class menuBar extends MenuBar{
     static Canvas canvas;
     static WritableImage wim;
     static GraphicsContext gc;
-    static boolean canDraw,drawnOn;
+    static boolean drawnOn;
     static Color currentColor;
     static double currentWidth;
     static Pane pane;
+    static boolean straightLineSelected;
+    static Pair<Double,Double> initialClick;
     public menuBar(Stage stage) throws IOException{
-        canDraw = false;
         // Set up menu bar
         imageView = new ImageView();
         imageView.setFitHeight(600);
@@ -66,47 +69,9 @@ public class menuBar extends MenuBar{
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         primaryStage = stage;
         this.addFile();
-        this.addDraw();
         this.addHelp();
         
-        canvas.setOnMousePressed( 
-                new EventHandler<MouseEvent>(){
-
-            @Override
-            public void handle(MouseEvent event) {
-                canvas.setWidth(imageView.getFitWidth());
-                canvas.setHeight(imageView.getFitHeight());
-                if (canDraw){
-                    System.out.println("Bigger Click");
-                    gc.beginPath();
-                    gc.setLineWidth(currentWidth);
-                    gc.setStroke(currentColor);
-                    gc.moveTo(event.getX(), event.getY());
-                    gc.stroke();
-                }
-            }
-        });
-
-        canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, 
-                new EventHandler<MouseEvent>(){
-
-            @Override
-            public void handle(MouseEvent event) {
-                if (canDraw){
-                    gc.setFill(currentColor);
-                    gc.lineTo(event.getX(), event.getY());
-                    gc.stroke();
-                }
-            }
-        });
         
-        canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                pane.snapshot(null, wim);
-                //mb.setWim(wim);
-            }
-        });
 }
     public void addFile(){
         // Creating the file option in the menu bar
@@ -120,15 +85,6 @@ public class menuBar extends MenuBar{
         mbFile.getItems().addAll(open,saveAs,save,clearImg);
         // Adds the file menu to the menu bar
         this.getMenus().addAll(mbFile);
-    }
-    
-    public void addDraw(){
-        final Menu mbDraw = new Menu("Draw");
-        MenuItem colorpicker = addLineColor();
-        MenuItem line = addDrawLine();
-        MenuItem width = addLineWidth();
-        mbDraw.getItems().addAll(line,colorpicker,width);
-        this.getMenus().addAll(mbDraw);
     }
     
     public void addHelp() throws IOException{
@@ -226,29 +182,6 @@ public class menuBar extends MenuBar{
     public ImageView getImageView(){
         return imageView;
     }
-
-    private MenuItem addDrawLine() {
-        MenuItem drawLine = new MenuItem("Draw Line");
-        drawLine.setOnAction(new EventHandler<ActionEvent>() {
-            @Override // Resets the window to show nothing
-            public void handle(ActionEvent event){
-                drawnOn = true;
-                if(!canDraw){
-                    canDraw= true;
-                }
-                else{
-                    canDraw= false;
-                }
-                
-            }
-        });
-
-        return drawLine;
-    }
-    
-    public boolean checkDraw(){
-        return canDraw;
-    }
     
     private MenuItem addAbout() throws IOException{
         MenuItem about = new MenuItem("About");
@@ -268,75 +201,15 @@ public class menuBar extends MenuBar{
         
         return about; 
     }
-    
-    private MenuItem addLineColor(){
-        MenuItem lineColor = new MenuItem("Select Line Color"); 
-        ColorPicker colorpicker = new ColorPicker(Color.BLACK);
-        lineColor.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event){
-                StackPane stack = new StackPane();
-                stack.setPadding(new Insets(25,25,25,25));
-                Stage tempstage = new Stage();
-                stack.getChildren().add(colorpicker);
-                Scene stageScene = new Scene(stack);
-                tempstage.setScene(stageScene);
-                
-                tempstage.show();
-                tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-                    @Override
-                    public void handle(WindowEvent event){
-                        currentColor = colorpicker.getValue();
-                    }
-                });
-            }
-        });
-        return lineColor;
-    }
-    
-    private MenuItem addLineWidth(){
-        MenuItem lineWidth = new MenuItem("Set Line Width");
-        Slider slider = new Slider(1,20,1);
-        slider.setMajorTickUnit(1.0);
-        slider.setSnapToTicks(true);
-        slider.setShowTickMarks(true);
-        slider.setShowTickLabels(true);
-        lineWidth.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event){
-                StackPane stack = new StackPane();
-                stack.setPadding(new Insets(25,25,25,25));
-                Stage tempstage = new Stage();
-                stack.getChildren().add(slider);
-                Scene stageScene = new Scene(stack);
-                tempstage.setScene(stageScene);
-                
-                tempstage.show();
-                tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-                    @Override
-                    public void handle(WindowEvent event){
-                        currentWidth = slider.getValue();
-                    }
-                });
-            }
-        });
-        
-        return lineWidth;
-    }
-    
-    public Color getCurrentColor(){
-        return currentColor;
-    }
-    public double getCurrentLineWidth(){
-        return currentWidth;
-    }
 
+    public void setDrawnOn(boolean beenDrawnOn){
+        drawnOn = beenDrawnOn;
+    }
+    
     public void setWim(WritableImage wim) {
         this.wim = wim;
     }
-    public Canvas getCanvas(){
-        return canvas;
-    }
+    
     public void setPane(Pane pane){
         this.pane = pane;
     }
