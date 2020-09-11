@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
@@ -23,6 +24,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Pair;
@@ -40,20 +42,21 @@ public class toolBar extends ToolBar{
     static WritableImage wim; 
     static Color currentColor;
     static double currentWidth;
-    static boolean straightLineSelected;
+    static boolean straightLineSelected, shapeSelected;
     static Pair<Double,Double> initialClick;
     static Pane pane;
     static ToggleGroup toggleGroup;
+    static String currentShape = "";
     public toolBar(Stage stage,ImageView imageView){
         this.stage = stage; 
         currentColor = Color.BLACK;
         canDraw = false;
         this.imageView = imageView;
-        canvas = new Canvas(600,500);
+        canvas = new Canvas(imageView.getFitWidth(),imageView.getFitHeight());
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         toggleGroup = new ToggleGroup();
-        this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addLineColor(),addLineWidth());
+        this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addRectangle(), addSquare(), addEllipse(), addCircle(),addLineColor(),addLineWidth());
     }
     
     private ToggleButton addDrawLine() { 
@@ -63,6 +66,7 @@ public class toolBar extends ToolBar{
             @Override
             public void handle(ActionEvent event){
                 drawnOn = true;
+                shapeSelected = false;
                 if((ToggleButton) toggleGroup.getSelectedToggle() != null){
                     canDraw= true;
                     straightLineSelected = true;
@@ -113,6 +117,7 @@ public class toolBar extends ToolBar{
             public void handle(ActionEvent event){
                 drawnOn = true;
                 straightLineSelected = false;
+                shapeSelected = false; 
                 if((ToggleButton) toggleGroup.getSelectedToggle() != null){
                     canDraw= true;
                 }
@@ -126,7 +131,7 @@ public class toolBar extends ToolBar{
                     public void handle(MouseEvent event) {
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
-                        if (canDraw){
+                        if (canDraw && !straightLineSelected && !shapeSelected){
                             gc.beginPath();
                             gc.setLineWidth(currentWidth);
                             gc.setStroke(currentColor);
@@ -141,7 +146,7 @@ public class toolBar extends ToolBar{
 
                     @Override
                     public void handle(MouseEvent event) {
-                        if (canDraw && !straightLineSelected){
+                        if (canDraw && !straightLineSelected && !shapeSelected){
                             gc.setFill(currentColor);
                             gc.lineTo(event.getX(), event.getY());
                             gc.stroke();
@@ -220,6 +225,347 @@ public class toolBar extends ToolBar{
         return lineWidth;
     }
     
+    private ToggleButton addRectangle(){
+        ToggleButton rectangle = new ToggleButton("Draw Rectangle");
+        
+        rectangle.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                canDraw= true;
+                shapeSelected = true;
+                straightLineSelected = false;
+                currentShape = "rect";
+                canvas.setOnMousePressed( 
+                    new EventHandler<MouseEvent>(){
+
+                        @Override
+                        public void handle(MouseEvent event) {
+                            canvas.setWidth(imageView.getFitWidth());
+                            canvas.setHeight(imageView.getFitHeight());
+                            if (canDraw && !straightLineSelected && shapeSelected){
+                                initialClick = new Pair(event.getX(),event.getY());
+                            }
+                        }
+                    });
+
+                    canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
+                            new EventHandler<MouseEvent>(){
+
+                            @Override
+                            public void handle(MouseEvent event) {
+                                if (canDraw && !straightLineSelected && shapeSelected && currentShape == "rect"){
+                                    gc.setLineWidth(currentWidth);
+                                    gc.setStroke(currentColor);
+                                    if ((event.getX()-initialClick.getKey() >= 0.0) && (event.getY()-initialClick.getValue()>=0.0)){
+                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                    }
+                                    else{
+                                        if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
+                                            double originalX = initialClick.getKey();
+                                            double originalY = initialClick.getValue();
+                                            initialClick = new Pair(event.getX(),originalY);
+                                            gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        }
+                                        else{
+                                            if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
+                                                double originalX = initialClick.getKey();
+                                                double originalY = initialClick.getValue();
+                                                initialClick = new Pair(originalX,event.getY());
+                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                            }
+                                            else{
+                                                if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                                    double originalX = initialClick.getKey();
+                                                    double originalY = initialClick.getValue();
+                                                    initialClick = new Pair(event.getX(),event.getY());
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    pane.snapshot(null, wim);
+                                }
+                            }
+                    });
+                
+            }
+        });
+        
+        rectangle.setToggleGroup(toggleGroup);
+        return rectangle;
+    }
+    
+    private ToggleButton addSquare(){
+        ToggleButton square = new ToggleButton("Draw Square");
+        
+        square.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                canDraw= true;
+                shapeSelected = true;
+                straightLineSelected = false;
+                currentShape = "square";
+                canvas.setOnMousePressed( 
+                        new EventHandler<MouseEvent>(){
+
+                            @Override
+                            public void handle(MouseEvent event) {
+                                canvas.setWidth(imageView.getFitWidth());
+                                canvas.setHeight(imageView.getFitHeight());
+                                if (canDraw && !straightLineSelected && shapeSelected){
+                                    initialClick = new Pair(event.getX(),event.getY());
+                                }
+                            }
+                        });
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
+                    new EventHandler<MouseEvent>(){
+
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (canDraw && !straightLineSelected && shapeSelected&& currentShape == "square"){
+                                gc.setLineWidth(currentWidth);
+                                gc.setStroke(currentColor);
+                                if ((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()>=0)){
+                                    if((event.getX()-initialClick.getKey())>(event.getY()-initialClick.getValue())){
+                                        double lesser = event.getY()-initialClick.getValue();
+                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                    }
+                                    else{
+                                        double lesser = event.getX()-initialClick.getValue();
+                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                    }
+                                }
+                                else{
+                                    if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
+                                        double originalX = initialClick.getKey();
+                                        double originalY = initialClick.getValue();
+
+                                        double width = Math.abs(originalX - initialClick.getKey());
+                                        double height = Math.abs(originalY - initialClick.getValue());
+
+                                        if(width < height){
+                                            gc.strokeRect(event.getX(), event.getY(), width, width);
+                                        }
+                                        else{
+                                            gc.strokeRect(event.getX(), event.getY(), height, height);
+                                        }
+                                    }    
+                                    else{
+                                        if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
+                                            double originalX = initialClick.getKey();
+                                            double originalY = initialClick.getValue();
+                                            initialClick = new Pair(originalX,event.getY());
+                                            double width = Math.abs(originalX - initialClick.getKey());
+                                            double height = Math.abs(originalY - initialClick.getValue());
+
+                                            if(width < height){
+                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), width, width);
+                                            }
+                                            else{
+                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), height, height);
+                                            }
+                                        }
+                                        else{
+                                            if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                                double originalX = initialClick.getKey();
+                                                double originalY = initialClick.getValue();
+                                                initialClick = new Pair(event.getX(),event.getY());
+                                                double width = Math.abs(originalX - initialClick.getKey());
+                                                double height = Math.abs(originalY - initialClick.getValue());
+
+                                                if(width < height){
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
+                                                else{
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                pane.snapshot(null, wim);
+                                initialClick = new Pair(0,0);
+                            }
+                        }
+                });
+            }
+        });
+        
+        square.setToggleGroup(toggleGroup);
+        return square;
+    }
+    
+   private ToggleButton addEllipse(){
+       ToggleButton ellipse = new ToggleButton("Draw Ellipse");
+       
+       ellipse.setOnAction(new EventHandler<ActionEvent> (){
+           @Override
+           public void handle(ActionEvent event){
+               canDraw= true;
+               shapeSelected = true;
+               straightLineSelected = false;
+               currentShape = "ellipse";
+                
+               canvas.setOnMousePressed( 
+                    new EventHandler<MouseEvent>(){
+
+                        @Override
+                        public void handle(MouseEvent event) {
+                            canvas.setWidth(imageView.getFitWidth());
+                            canvas.setHeight(imageView.getFitHeight());
+                            if (canDraw && !straightLineSelected && shapeSelected){
+                                initialClick = new Pair(event.getX(),event.getY());
+                            }
+                        }
+                });
+               
+               canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
+                        new EventHandler<MouseEvent>(){
+
+                        @Override
+                        public void handle(MouseEvent event) {
+                            if (canDraw && !straightLineSelected && shapeSelected && currentShape == "ellipse"){
+                                gc.setLineWidth(currentWidth);
+                                gc.setStroke(currentColor);
+                                if ((event.getX()-initialClick.getKey() >= 0.0) && (event.getY()-initialClick.getValue()>=0.0)){
+                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                }
+                                else{
+                                    if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
+                                        double originalX = initialClick.getKey();
+                                        double originalY = initialClick.getValue();
+                                        initialClick = new Pair(event.getX(),originalY);
+                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                    }
+                                    else{
+                                        if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
+                                            double originalX = initialClick.getKey();
+                                            double originalY = initialClick.getValue();
+                                            initialClick = new Pair(originalX,event.getY());
+                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                        }
+                                        else{
+                                            if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                                double originalX = initialClick.getKey();
+                                                double originalY = initialClick.getValue();
+                                                initialClick = new Pair(event.getX(),event.getY());
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                            }
+                                        }
+                                    }
+                                }
+                                pane.snapshot(null, wim);
+                            }
+                        }
+                    });
+           }
+       });
+       
+       
+       ellipse.setToggleGroup(toggleGroup);
+       return ellipse;
+   }
+    
+   private ToggleButton addCircle(){
+        ToggleButton circle = new ToggleButton("Draw Circle");
+        
+        circle.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                canDraw= true;
+                shapeSelected = true;
+                straightLineSelected = false;
+                currentShape = "circle";
+                canvas.setOnMousePressed( 
+                        new EventHandler<MouseEvent>(){
+
+                            @Override
+                            public void handle(MouseEvent event) {
+                                canvas.setWidth(imageView.getFitWidth());
+                                canvas.setHeight(imageView.getFitHeight());
+                                if (canDraw && !straightLineSelected && shapeSelected){
+                                    initialClick = new Pair(event.getX(),event.getY());
+                                }
+                            }
+                        });
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
+                    new EventHandler<MouseEvent>(){
+
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (canDraw && !straightLineSelected && shapeSelected&& currentShape == "circle"){
+                                gc.setLineWidth(currentWidth);
+                                gc.setStroke(currentColor);
+                                if ((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()>=0)){
+                                    if((event.getX()-initialClick.getKey())>(event.getY()-initialClick.getValue())){
+                                        double lesser = event.getY()-initialClick.getValue();
+                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                    }
+                                    else{
+                                        double lesser = event.getX()-initialClick.getValue();
+                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                    }
+                                }
+                                else{
+                                    if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
+                                        double originalX = initialClick.getKey();
+                                        double originalY = initialClick.getValue();
+
+                                        double width = Math.abs(originalX - initialClick.getKey());
+                                        double height = Math.abs(originalY - initialClick.getValue());
+
+                                        if(width < height){
+                                            gc.strokeOval(event.getX(), event.getY(), width, width);
+                                        }
+                                        else{
+                                            gc.strokeOval(event.getX(), event.getY(), height, height);
+                                        }
+                                    }    
+                                    else{
+                                        if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
+                                            double originalX = initialClick.getKey();
+                                            double originalY = initialClick.getValue();
+                                            initialClick = new Pair(originalX,event.getY());
+                                            double width = Math.abs(originalX - initialClick.getKey());
+                                            double height = Math.abs(originalY - initialClick.getValue());
+
+                                            if(width < height){
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                            }
+                                            else{
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                            }
+                                        }
+                                        else{
+                                            if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                                double originalX = initialClick.getKey();
+                                                double originalY = initialClick.getValue();
+                                                initialClick = new Pair(event.getX(),event.getY());
+                                                double width = Math.abs(originalX - initialClick.getKey());
+                                                double height = Math.abs(originalY - initialClick.getValue());
+
+                                                if(width < height){
+                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
+                                                else{
+                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                pane.snapshot(null, wim);
+                                initialClick = new Pair(0,0);
+                            }
+                        }
+                });
+            }
+        });
+        
+        circle.setToggleGroup(toggleGroup);
+        return circle;
+    }
+   
     public void setWim(WritableImage wim){
         this.wim = wim;
     }
