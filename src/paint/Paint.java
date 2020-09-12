@@ -6,25 +6,31 @@
 package paint;
 
 
+import java.awt.image.RenderedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javax.imageio.ImageIO;
+import static paint.menuBar.drawnOn;
+import static paint.menuBar.file;
 
 /**
  *
@@ -45,7 +51,7 @@ public class Paint extends Application {
         // Setting up the layout of the window
         GridPane grid = new GridPane();
         StackPane stack = new StackPane();
-        WritableImage wim = new WritableImage((int)mb.getImageView().getFitHeight(),(int)mb.getImageView().getFitWidth());
+        WritableImage wim = new WritableImage((int)mb.getImageView().getFitWidth(),(int)mb.getImageView().getFitHeight());
         mb.setWim(wim);
         tb.setWim(wim);
         
@@ -72,6 +78,45 @@ public class Paint extends Application {
         primaryStage.setTitle("Paint");
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>(){
+            @Override
+            public void handle(WindowEvent event){
+                primaryStage.show();
+                if(!paint.menuBar.saved){
+                    GridPane grid = new GridPane();
+                    grid.setPadding(new Insets(25,25,25,25));
+                    Stage tempstage = new Stage();
+                    Label label = new Label("Do you wish to save?");
+                    Button button = new Button("Save");
+                    grid.add(label, 0, 0);
+                    grid.add(button,0,1);
+                    Scene stageScene = new Scene(grid);
+                    primaryStage.setScene(stageScene);
+                    primaryStage.showAndWait();
+                    button.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event){
+                            
+                            try {
+                                    if(!drawnOn){
+                                        paint.menuBar.saved = true;
+                                        ImageIO.write(SwingFXUtils.fromFXImage(paint.menuBar.imageView.getImage(), null),"png",file);
+                                    }
+                                    else{
+                                       RenderedImage renderedImage = SwingFXUtils.fromFXImage(paint.menuBar.wim, null);
+                                       ImageIO.write(renderedImage, "png", file);  
+                                    }
+                                }    
+                                    catch (Exception e) {
+                                        System.out.println("Invalid selection.");
+                                    }
+
+                            }
+                        });
+                }
+            }
+        });
     }
     
 
@@ -81,5 +126,6 @@ public class Paint extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+   
     
 }

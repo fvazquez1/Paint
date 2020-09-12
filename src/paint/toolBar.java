@@ -5,6 +5,7 @@
  */
 package paint;
 
+import java.util.Stack;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -40,28 +41,31 @@ public class toolBar extends ToolBar{
     static Canvas canvas;
     static GraphicsContext gc;
     static WritableImage wim; 
-    static Color currentColor;
+    static Color currentColor, currentFillColor;
     static double currentWidth;
-    static boolean straightLineSelected, shapeSelected;
+    static boolean straightLineSelected, shapeSelected, colorGrabbed;
     static Pair<Double,Double> initialClick;
     static Pane pane;
     static ToggleGroup toggleGroup;
     static String currentShape = "";
+    static Stack<WritableImage> undoStack;
+    
     public toolBar(Stage stage,ImageView imageView){
         this.stage = stage; 
         currentColor = Color.BLACK;
         canDraw = false;
         this.imageView = imageView;
+        toggleGroup = new ToggleGroup();
+        this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addRectangle(),
+                addSquare(), addEllipse(), addCircle(),addLineColor(),
+                addFillColor(),addColorGrab(),addLineWidth());
         canvas = new Canvas(imageView.getFitWidth(),imageView.getFitHeight());
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
-        toggleGroup = new ToggleGroup();
-        this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addRectangle(), addSquare(), addEllipse(), addCircle(),addLineColor(),addLineWidth());
     }
     
     private ToggleButton addDrawLine() { 
         ToggleButton drawLine = new ToggleButton("Draw Line");
-        
         drawLine.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
@@ -80,8 +84,8 @@ public class toolBar extends ToolBar{
 
                     @Override
                     public void handle(MouseEvent event) {
-                        canvas.setWidth(imageView.getFitWidth());
-                        canvas.setHeight(imageView.getFitHeight());
+                        canvas.setWidth(paint.menuBar.imageView.getFitWidth());
+                        canvas.setHeight(paint.menuBar.imageView.getFitHeight());
                         if (canDraw && straightLineSelected){
                             initialClick = new Pair(event.getX(),event.getY());
                         }
@@ -98,6 +102,7 @@ public class toolBar extends ToolBar{
                                 gc.setStroke(currentColor);
                                 gc.strokeLine(initialClick.getKey(), initialClick.getValue(), event.getX(), event.getY());
                                 pane.snapshot(null, wim);
+                                undoStack.push(wim);
                             }
                         }
                 });
@@ -158,6 +163,7 @@ public class toolBar extends ToolBar{
                     @Override
                     public void handle(MouseEvent event) {
                         pane.snapshot(null, wim);
+                        undoStack.push(pane.snapshot(null, wim));
                         //mb.setWim(wim);
                     }
                 });
@@ -172,6 +178,9 @@ public class toolBar extends ToolBar{
     private Button addLineColor(){
         Button lineColor = new Button("Select Line Color"); 
         ColorPicker colorpicker = new ColorPicker(Color.BLACK);
+        if(colorGrabbed){
+            colorpicker.setValue(currentColor);
+        }
         lineColor.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
@@ -192,6 +201,31 @@ public class toolBar extends ToolBar{
             }
         });
         return lineColor;
+    }
+    
+    private Button addFillColor(){
+        Button fillColor = new Button("Select fill Color"); 
+        ColorPicker colorpicker = new ColorPicker(Color.TRANSPARENT);
+        fillColor.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                StackPane stack = new StackPane();
+                stack.setPadding(new Insets(25,25,25,25));
+                Stage tempstage = new Stage();
+                stack.getChildren().add(colorpicker);
+                Scene stageScene = new Scene(stack);
+                tempstage.setScene(stageScene);
+                
+                tempstage.show();
+                tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+                    @Override
+                    public void handle(WindowEvent event){
+                        currentFillColor = colorpicker.getValue();
+                    }
+                });
+            }
+        });
+        return fillColor;
     }
     
     private Button addLineWidth(){
@@ -256,35 +290,58 @@ public class toolBar extends ToolBar{
                                 if (canDraw && !straightLineSelected && shapeSelected && currentShape == "rect"){
                                     gc.setLineWidth(currentWidth);
                                     gc.setStroke(currentColor);
+                                    gc.setFill(currentFillColor);
                                     if ((event.getX()-initialClick.getKey() >= 0.0) && (event.getY()-initialClick.getValue()>=0.0)){
-                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        if(currentFillColor != null){
+                                            gc.fillRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        }
+                                        else{
+                                            gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        }
                                     }
                                     else{
                                         if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
                                             initialClick = new Pair(event.getX(),originalY);
-                                            gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                            if(currentFillColor != null){
+                                                gc.fillRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                            }
+                                            else{
+                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                            }
                                         }
                                         else{
                                             if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
                                                 double originalX = initialClick.getKey();
                                                 double originalY = initialClick.getValue();
                                                 initialClick = new Pair(originalX,event.getY());
-                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                if(currentFillColor != null){
+                                                    gc.fillRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                }
+                                                else{
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                }
                                             }
                                             else{
                                                 if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
                                                     double originalX = initialClick.getKey();
                                                     double originalY = initialClick.getValue();
                                                     initialClick = new Pair(event.getX(),event.getY());
-                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                    if(currentFillColor != null){
+                                                        gc.fillRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                    }
+                                                    else{
+                                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                    pane.snapshot(null, wim);
+                                    
                                 }
+                                pane.snapshot(null, wim);
+                                undoStack.push(wim);
                             }
                     });
                 
@@ -325,14 +382,25 @@ public class toolBar extends ToolBar{
                         if (canDraw && !straightLineSelected && shapeSelected&& currentShape == "square"){
                                 gc.setLineWidth(currentWidth);
                                 gc.setStroke(currentColor);
+                                gc.setFill(currentFillColor);
                                 if ((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()>=0)){
                                     if((event.getX()-initialClick.getKey())>(event.getY()-initialClick.getValue())){
                                         double lesser = event.getY()-initialClick.getValue();
-                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if(currentFillColor != null){
+                                            gc.fillRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
+                                        else{
+                                            gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
                                     }
                                     else{
                                         double lesser = event.getX()-initialClick.getValue();
-                                        gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if(currentFillColor != null){
+                                            gc.fillRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
+                                        else{
+                                            gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
                                     }
                                 }
                                 else{
@@ -344,10 +412,20 @@ public class toolBar extends ToolBar{
                                         double height = Math.abs(originalY - initialClick.getValue());
 
                                         if(width < height){
-                                            gc.strokeRect(event.getX(), event.getY(), width, width);
+                                            if(currentFillColor != null){
+                                                gc.fillRect(event.getX(), event.getY(), width, width);
+                                            }
+                                            else{
+                                                gc.strokeRect(event.getX(), event.getY(), width, width);
+                                            }
                                         }
                                         else{
-                                            gc.strokeRect(event.getX(), event.getY(), height, height);
+                                            if(currentFillColor != null){
+                                                gc.fillRect(event.getX(), event.getY(), height, height);
+                                            }
+                                            else{
+                                                gc.strokeRect(event.getX(), event.getY(), height, height);
+                                            }
                                         }
                                     }    
                                     else{
@@ -359,10 +437,20 @@ public class toolBar extends ToolBar{
                                             double height = Math.abs(originalY - initialClick.getValue());
 
                                             if(width < height){
-                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                if(currentFillColor != null){
+                                                    gc.fillRect(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
+                                                else{
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
                                             }
                                             else{
-                                                gc.strokeRect(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                if(currentFillColor != null){
+                                                    gc.fillRect(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
+                                                else{
+                                                    gc.strokeRect(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
                                             }
                                         }
                                         else{
@@ -383,9 +471,11 @@ public class toolBar extends ToolBar{
                                         }
                                     }
                                 }
-                                pane.snapshot(null, wim);
+                                
                                 initialClick = new Pair(0,0);
                             }
+                            pane.snapshot(null, wim);
+                            undoStack.push(wim);
                         }
                 });
             }
@@ -427,35 +517,58 @@ public class toolBar extends ToolBar{
                             if (canDraw && !straightLineSelected && shapeSelected && currentShape == "ellipse"){
                                 gc.setLineWidth(currentWidth);
                                 gc.setStroke(currentColor);
+                                gc.setFill(currentFillColor);
                                 if ((event.getX()-initialClick.getKey() >= 0.0) && (event.getY()-initialClick.getValue()>=0.0)){
-                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                    if(currentFillColor != null){
+                                        gc.fillOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                    }
+                                    else{
+                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                    }
                                 }
                                 else{
                                     if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
                                         double originalX = initialClick.getKey();
                                         double originalY = initialClick.getValue();
                                         initialClick = new Pair(event.getX(),originalY);
-                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        if(currentFillColor != null){
+                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        }
+                                        else{
+                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (event.getY()-initialClick.getValue()));
+                                        }
                                     }
                                     else{
                                         if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
                                             initialClick = new Pair(originalX,event.getY());
-                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                            if(currentFillColor != null){
+                                                gc.fillOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                            }
+                                            else{
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX()-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                            }
                                         }
                                         else{
                                             if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
                                                 double originalX = initialClick.getKey();
                                                 double originalY = initialClick.getValue();
                                                 initialClick = new Pair(event.getX(),event.getY());
-                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                if(currentFillColor != null){
+                                                    gc.fillOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                }
+                                                else{
+                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX-initialClick.getKey()), (originalY-initialClick.getValue()));
+                                                }
                                             }
                                         }
                                     }
                                 }
-                                pane.snapshot(null, wim);
+                                
                             }
+                            pane.snapshot(null, wim);
+                            undoStack.push(wim);
                         }
                     });
            }
@@ -496,14 +609,25 @@ public class toolBar extends ToolBar{
                         if (canDraw && !straightLineSelected && shapeSelected&& currentShape == "circle"){
                                 gc.setLineWidth(currentWidth);
                                 gc.setStroke(currentColor);
+                                gc.setFill(currentFillColor);
                                 if ((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()>=0)){
                                     if((event.getX()-initialClick.getKey())>(event.getY()-initialClick.getValue())){
                                         double lesser = event.getY()-initialClick.getValue();
-                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if(currentFillColor != null){
+                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
+                                        else{
+                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
                                     }
                                     else{
                                         double lesser = event.getX()-initialClick.getValue();
-                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if(currentFillColor != null){
+                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
+                                        else{
+                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        }
                                     }
                                 }
                                 else{
@@ -515,10 +639,20 @@ public class toolBar extends ToolBar{
                                         double height = Math.abs(originalY - initialClick.getValue());
 
                                         if(width < height){
-                                            gc.strokeOval(event.getX(), event.getY(), width, width);
+                                            if(currentFillColor != null){
+                                                gc.fillOval(event.getX(), event.getY(), width, width);
+                                            }
+                                            else{
+                                                gc.strokeOval(event.getX(), event.getY(), width, width);
+                                            }
                                         }
                                         else{
-                                            gc.strokeOval(event.getX(), event.getY(), height, height);
+                                            if(currentFillColor != null){
+                                                gc.fillOval(event.getX(), event.getY(), height, height);
+                                            }
+                                            else{
+                                                gc.strokeOval(event.getX(), event.getY(), height, height);
+                                            }
                                         }
                                     }    
                                     else{
@@ -530,10 +664,20 @@ public class toolBar extends ToolBar{
                                             double height = Math.abs(originalY - initialClick.getValue());
 
                                             if(width < height){
-                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                if(currentFillColor != null){
+                                                    gc.fillOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
+                                                else{
+                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                }
                                             }
                                             else{
-                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                if(currentFillColor != null){
+                                                    gc.fillOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
+                                                else{
+                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                }
                                             }
                                         }
                                         else{
@@ -545,18 +689,30 @@ public class toolBar extends ToolBar{
                                                 double height = Math.abs(originalY - initialClick.getValue());
 
                                                 if(width < height){
-                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                    if(currentFillColor != null){
+                                                        gc.fillOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                    }
+                                                    else{
+                                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                    }
                                                 }
                                                 else{
-                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                    if(currentFillColor != null){
+                                                        gc.fillOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                    }
+                                                    else{
+                                                        gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                pane.snapshot(null, wim);
+                                
                                 initialClick = new Pair(0,0);
                             }
+                            pane.snapshot(null, wim);
+                            undoStack.push(wim);
                         }
                 });
             }
@@ -565,6 +721,27 @@ public class toolBar extends ToolBar{
         circle.setToggleGroup(toggleGroup);
         return circle;
     }
+   
+   private ToggleButton addColorGrab(){
+       ToggleButton colorGrab = new ToggleButton("Grab Color");
+       
+       colorGrab.setOnAction(new EventHandler<ActionEvent>() {
+           @Override
+           public void handle(ActionEvent event){
+               canDraw= false;
+               canvas.setOnMouseClicked(new EventHandler<MouseEvent>(){
+                   @Override 
+                   public void handle(MouseEvent event){
+                       currentColor = wim.getPixelReader().getColor((int)event.getX(), (int)event.getY());
+                       colorGrabbed = true;
+                       
+                   }
+               });
+           }
+       });
+       colorGrab.setToggleGroup(toggleGroup);
+       return colorGrab;
+   }
    
     public void setWim(WritableImage wim){
         this.wim = wim;

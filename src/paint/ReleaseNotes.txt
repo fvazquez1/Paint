@@ -1,3 +1,42 @@
+Frankie's Paint Version 3.0 - 09/11/2020
+
+New Features:
+
+- Tool Bar created!
+	- Tool Bar now has everything that was once in the "Draw" option 
+- Additional Drawing options
+	- The following shapes can now be drawn:
+		- Square, Rectangle, Circle, Ellipse
+	- Shapes can be adjusted with line color, line width, and the NEW fill color option
+	- Straight lines are now available
+		-Line width, and line color affect the straight line
+- Keyboard shortcuts introduced
+	- Ctrl + S = Save
+	- Ctrl + Shift + S = Save As
+	- Ctrl + U = Undo
+Known Issues:
+-Save isn't overwriting the file in it's position, so "Save As..." must be used to save an image or drawing
+-About pop-up isn't very appealing to the eye
+-Need to click the "x" for the pop-up windows for both line color and line width in order for the selection to be saved
+-Safe save does not work, so the something MUST be saved for the application to close properly
+-Color Grabber does not work 
+-Increasing line thickness seems to cause jagged edges when drawing. This may have been an issue already, but has not yet been noted.
+-Undo button does not work
+
+Expected Next Sprint: 
+- Adding text to the image
+- Adding more shapes
+- Adding an eraser
+- Adding a redo button
+- Adding a way for the shape, or line, being drawn to be seen as it is being adjusted
+- Improving the help 
+- Adding a selection box that allows for cutting and pasting sections of the drawing
+- Fixing the issues in the known issues.
+
+Links:
+Demo: (Coming Soon)
+Github: https://github.com/fvazquez1/Paint 
+================================================================================================================================================================
 Frankie's Paint Version 2.0 - 09/04/2020
 
 New Features:
