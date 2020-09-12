@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.embed.swing.SwingFXUtils;
@@ -31,6 +32,9 @@ import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -52,24 +56,24 @@ public class menuBar extends MenuBar{
     static Canvas canvas;
     static WritableImage wim;
     static GraphicsContext gc;
-    static boolean drawnOn;
+    static boolean drawnOn,saved;
     static Color currentColor;
     static double currentWidth;
     static Pane pane;
     static boolean straightLineSelected;
     static Pair<Double,Double> initialClick;
+    static Stack<WritableImage> undoStack;
     public menuBar(Stage stage) throws IOException{
         // Set up menu bar
         imageView = new ImageView();
         imageView.setFitHeight(600);
-        imageView.setFitWidth(500);
+        imageView.setFitWidth(1200);
         imageView.setPreserveRatio(true);
-        canvas = new Canvas(600,500);
-        gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         primaryStage = stage;
         this.addFile();
         this.addHelp();
+        saved = false;
         
         
 }
@@ -81,8 +85,9 @@ public class menuBar extends MenuBar{
         MenuItem saveAs = addSaveAsImage();
         MenuItem save = addSaveImage();
         MenuItem clearImg = addClearImage();
+        MenuItem undo = addUndo();
         // Adds all the options to the file menu
-        mbFile.getItems().addAll(open,saveAs,save,clearImg);
+        mbFile.getItems().addAll(open,saveAs,save,undo,clearImg);
         // Adds the file menu to the menu bar
         this.getMenus().addAll(mbFile);
     }
@@ -130,8 +135,13 @@ public class menuBar extends MenuBar{
                     new FileChooser.ExtensionFilter("*.png","*.jpg"));
                 file = sFileChooser.showSaveDialog(primaryStage);
                 if (file != null) {
+                    drawnOn = paint.toolBar.drawnOn;
+                    wim = paint.toolBar.wim;
+                    pane = paint.toolBar.pane;
+                    undoStack.push(wim);
                     try {
                         if(!drawnOn){
+                            saved = true;
                             ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"png",file);
                         }
                         else{
@@ -145,6 +155,7 @@ public class menuBar extends MenuBar{
                 }
             }
         });
+        saveAs.setAccelerator(new KeyCodeCombination(KeyCode.S,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
         return saveAs;
     }
     private MenuItem addSaveImage(){
@@ -152,8 +163,12 @@ public class menuBar extends MenuBar{
         save.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
+                drawnOn = paint.toolBar.drawnOn;
+                wim = paint.toolBar.wim;
+                undoStack.push(wim);
                 try {
                         if(!drawnOn){
+                            saved = true;
                             ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"png",file);
                         }
                         else{
@@ -166,8 +181,36 @@ public class menuBar extends MenuBar{
                     }
             }
         });
+        save.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
+        
         return save;
     }
+    
+    private MenuItem addUndo(){
+        MenuItem undo = new MenuItem("Undo");
+        
+        undo.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                undo();
+            }
+        });
+        undo.setAccelerator(new KeyCodeCombination(KeyCode.U,KeyCombination.CONTROL_DOWN));
+        return undo;
+    }
+    
+    private WritableImage undo(){
+        WritableImage last = wim;
+        undoStack = paint.toolBar.undoStack;
+        try{
+            last = undoStack.pop();
+        }
+        catch(Exception e){
+            System.out.println("Nothing to undo");
+        }
+        return last;
+    }
+    
     private MenuItem addClearImage(){
         // Adding clear image option under file
         MenuItem clearImg = new MenuItem("Clear Image");
@@ -198,7 +241,7 @@ public class menuBar extends MenuBar{
                     popup.show(primaryStage);
             }
         });
-        
+        about.setAccelerator(new KeyCodeCombination(KeyCode.H,KeyCombination.CONTROL_DOWN));
         return about; 
     }
 
