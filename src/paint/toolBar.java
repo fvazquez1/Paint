@@ -16,16 +16,20 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Pair;
@@ -48,6 +52,7 @@ public class toolBar extends ToolBar{
     static Pane pane;
     static ToggleGroup toggleGroup;
     static String currentShape = "";
+    static String currentText = "";
     static Stack<WritableImage> undoStack;
     
     public toolBar(Stage stage,ImageView imageView){
@@ -58,7 +63,7 @@ public class toolBar extends ToolBar{
         toggleGroup = new ToggleGroup();
         this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addRectangle(),
                 addSquare(), addEllipse(), addCircle(),addLineColor(),
-                addFillColor(),addColorGrab(),addLineWidth());
+                addFillColor(),addColorGrab(),addLineWidth(), addTextBox());
         canvas = new Canvas(imageView.getFitWidth(),imageView.getFitHeight());
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
@@ -102,7 +107,7 @@ public class toolBar extends ToolBar{
                                 gc.setStroke(currentColor);
                                 gc.strokeLine(initialClick.getKey(), initialClick.getValue(), event.getX(), event.getY());
                                 pane.snapshot(null, wim);
-                                undoStack.push(wim);
+                                //undoStack.push(wim);
                             }
                         }
                 });
@@ -163,7 +168,7 @@ public class toolBar extends ToolBar{
                     @Override
                     public void handle(MouseEvent event) {
                         pane.snapshot(null, wim);
-                        undoStack.push(pane.snapshot(null, wim));
+                        //undoStack.push(pane.snapshot(null, wim));
                         //mb.setWim(wim);
                     }
                 });
@@ -259,6 +264,54 @@ public class toolBar extends ToolBar{
         return lineWidth;
     }
     
+    private ToggleButton addTextBox(){
+        ToggleButton txtBox = new ToggleButton("Insert Text");
+        
+        txtBox.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                canDraw = false;
+                shapeSelected = false;
+                straightLineSelected = false;
+                
+                Stage tempstage = new Stage();
+                tempstage.setTitle("Text To Be Written");
+
+                TextArea textArea = new TextArea();
+                VBox vbox = new VBox(textArea);
+
+                Scene stageScene = new Scene(vbox);
+                tempstage.setScene(stageScene);
+
+                tempstage.show();
+
+                tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+                    @Override
+                    public void handle(WindowEvent event){
+                        currentText = textArea.getText();
+                    }
+                });
+                
+                canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event){
+                        canvas.setWidth(imageView.getFitWidth());
+                        canvas.setHeight(imageView.getFitHeight());
+                        initialClick = new Pair(event.getX(),event.getY());
+                        
+                        
+                        gc.setStroke(currentColor);
+                        gc.setFont(Font.font(currentWidth+12));
+                        gc.strokeText(currentText, initialClick.getKey(), initialClick.getValue());
+                    }
+                });
+                
+            }
+        });
+        
+        return txtBox;
+    }
+    
     private ToggleButton addRectangle(){
         ToggleButton rectangle = new ToggleButton("Draw Rectangle");
         
@@ -269,6 +322,7 @@ public class toolBar extends ToolBar{
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "rect";
+                
                 canvas.setOnMousePressed( 
                     new EventHandler<MouseEvent>(){
 
@@ -341,7 +395,7 @@ public class toolBar extends ToolBar{
                                     
                                 }
                                 pane.snapshot(null, wim);
-                                undoStack.push(wim);
+                                //undoStack.push(wim);
                             }
                     });
                 
@@ -475,7 +529,7 @@ public class toolBar extends ToolBar{
                                 initialClick = new Pair(0,0);
                             }
                             pane.snapshot(null, wim);
-                            undoStack.push(wim);
+                            //undoStack.push(wim);
                         }
                 });
             }
@@ -568,7 +622,7 @@ public class toolBar extends ToolBar{
                                 
                             }
                             pane.snapshot(null, wim);
-                            undoStack.push(wim);
+                            //undoStack.push(wim);
                         }
                     });
            }
@@ -712,7 +766,7 @@ public class toolBar extends ToolBar{
                                 initialClick = new Pair(0,0);
                             }
                             pane.snapshot(null, wim);
-                            undoStack.push(wim);
+                            //undoStack.push(wim);
                         }
                 });
             }
