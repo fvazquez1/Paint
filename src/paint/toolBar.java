@@ -9,14 +9,17 @@ import java.util.Stack;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
@@ -47,13 +50,14 @@ public class toolBar extends ToolBar{
     static WritableImage wim; 
     static Color currentColor, currentFillColor;
     static double currentWidth;
-    static boolean straightLineSelected, shapeSelected, colorGrabbed;
+    static boolean straightLineSelected, shapeSelected, colorGrabbed, eraserSelected;
     static Pair<Double,Double> initialClick;
     static Pane pane;
     static ToggleGroup toggleGroup;
     static String currentShape = "";
     static String currentText = "";
     static Stack<WritableImage> undoStack;
+    static Integer nSides;
     
     public toolBar(Stage stage,ImageView imageView){
         this.stage = stage; 
@@ -61,9 +65,10 @@ public class toolBar extends ToolBar{
         canDraw = false;
         this.imageView = imageView;
         toggleGroup = new ToggleGroup();
-        this.getItems().addAll(addDrawLine(),addFreeDrawLine(),addRectangle(),
-                addSquare(), addEllipse(), addCircle(),addLineColor(),
-                addFillColor(),addColorGrab(),addLineWidth(), addTextBox());
+        this.getItems().addAll(addEraser(), addDrawLine(),addFreeDrawLine(),addRectangle(),
+                addTriangle(), addSquare(), addEllipse(), addCircle(),addPolygon(),
+                addLineColor(),addFillColor(),addColorGrab(),addLineWidth(), 
+                addTextBox());
         canvas = new Canvas(imageView.getFitWidth(),imageView.getFitHeight());
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
@@ -76,6 +81,7 @@ public class toolBar extends ToolBar{
             public void handle(ActionEvent event){
                 drawnOn = true;
                 shapeSelected = false;
+                eraserSelected = false;
                 if((ToggleButton) toggleGroup.getSelectedToggle() != null){
                     canDraw= true;
                     straightLineSelected = true;
@@ -127,7 +133,8 @@ public class toolBar extends ToolBar{
             public void handle(ActionEvent event){
                 drawnOn = true;
                 straightLineSelected = false;
-                shapeSelected = false; 
+                shapeSelected = false;
+                eraserSelected = false;
                 if((ToggleButton) toggleGroup.getSelectedToggle() != null){
                     canDraw= true;
                 }
@@ -309,6 +316,8 @@ public class toolBar extends ToolBar{
             }
         });
         
+        txtBox.setToggleGroup(toggleGroup);
+        
         return txtBox;
     }
     
@@ -322,7 +331,7 @@ public class toolBar extends ToolBar{
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "rect";
-                
+                eraserSelected = false;
                 canvas.setOnMousePressed( 
                     new EventHandler<MouseEvent>(){
 
@@ -404,6 +413,264 @@ public class toolBar extends ToolBar{
         
         rectangle.setToggleGroup(toggleGroup);
         return rectangle;
+    }
+    
+    private ToggleButton addEraser(){
+        ToggleButton eraser = new ToggleButton("Eraser");
+        
+        eraser.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                drawnOn = true;
+                straightLineSelected = false;
+                shapeSelected = false; 
+                eraserSelected = true;
+                canDraw = false;
+                canvas.setOnMousePressed( 
+                new EventHandler<MouseEvent>(){
+                    @Override
+                    public void handle(MouseEvent event) {
+                        canvas.setWidth(imageView.getFitWidth());
+                        canvas.setHeight(imageView.getFitHeight());
+                        if (eraserSelected){
+                            gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
+                        }
+                    }
+                });
+
+                canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, 
+                        new EventHandler<MouseEvent>(){
+                        @Override
+                        public void handle(MouseEvent event) {
+                            if (eraserSelected){
+                                gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
+                            }
+                        }
+                    });
+        
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
+                        pane.snapshot(null, wim);
+                    }
+                });
+            }
+        });
+        
+        eraser.setToggleGroup(toggleGroup);
+        return eraser;
+    }
+    
+    private ToggleButton addTriangle(){
+        ToggleButton triangle = new ToggleButton("Draw Triangle");
+        
+        triangle.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                canDraw= true;
+                shapeSelected = true;
+                straightLineSelected = false;
+                currentShape = "tri";
+                eraserSelected = false;
+                canvas.setOnMousePressed( 
+                    new EventHandler<MouseEvent>(){
+
+                        @Override
+                        public void handle(MouseEvent event) {
+                            canvas.setWidth(imageView.getFitWidth());
+                            canvas.setHeight(imageView.getFitHeight());
+                            gc.setLineWidth(currentWidth);
+                            gc.setStroke(currentColor);
+                            gc.setFill(currentFillColor);
+                            
+                            if (canDraw && !straightLineSelected && shapeSelected){
+                                initialClick = new Pair(event.getX(),event.getY());
+                            }
+                            
+                        }
+                });
+
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,new EventHandler<MouseEvent>(){
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if ((event.getX()-initialClick.getKey() >= 0.0) && (event.getY()-initialClick.getValue()>=0.0)){
+                        double sideLength = event.getX() - initialClick.getKey();
+                        double[] xPoints = new double[3];
+                        double[] yPoints = new double[3];
+
+                        xPoints[0] = initialClick.getKey();
+                        yPoints[0] = initialClick.getValue();
+
+                        xPoints[1] = event.getX();
+                        yPoints[1] = event.getY();
+
+                        xPoints[2] = (event.getX() - (2 * (sideLength)));
+                        yPoints[2] = event.getY();
+                        if(currentFillColor != null){
+                            gc.fillPolygon(xPoints, yPoints, 3);
+                        }
+                        else{
+                            gc.strokePolygon(xPoints, yPoints, 3);
+                        }
+                    }
+                    else{
+                        if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()>=0)){
+                            
+                            double sideLength = initialClick.getKey() - event.getX();
+                            double[] xPoints = new double[3];
+                            double[] yPoints = new double[3];
+
+                            xPoints[0] = initialClick.getKey();
+                            yPoints[0] = initialClick.getValue();
+
+                            xPoints[1] = event.getX();
+                            yPoints[1] = event.getY();
+
+                            xPoints[2] = (event.getX() + (2 * (sideLength)));
+                            yPoints[2] = event.getY();
+                            if(currentFillColor != null){
+                                gc.fillPolygon(xPoints, yPoints, 3);
+                            }
+                            else{
+                                gc.strokePolygon(xPoints, yPoints, 3);
+                            }
+                        }
+                        else{
+                            if((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()<0)){
+                                double sideLength = event.getX() - initialClick.getKey();
+                                double[] xPoints = new double[3];
+                                double[] yPoints = new double[3];
+
+                                xPoints[0] = initialClick.getKey();
+                                yPoints[0] = initialClick.getValue();
+
+                                xPoints[1] = event.getX();
+                                yPoints[1] = event.getY();
+
+                                xPoints[2] = (initialClick.getKey() + (2 * (sideLength)));
+                                yPoints[2] = initialClick.getValue();
+                                if(currentFillColor != null){
+                                    gc.fillPolygon(xPoints, yPoints, 3);
+                                }
+                                else{
+                                    gc.strokePolygon(xPoints, yPoints, 3);
+                                }
+                            }
+                            else{
+                                if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                    double sideLength = initialClick.getKey() - event.getX();
+                                    double[] xPoints = new double[3];
+                                    double[] yPoints = new double[3];
+
+                                    xPoints[0] = initialClick.getKey();
+                                    yPoints[0] = initialClick.getValue();
+
+                                    xPoints[1] = event.getX();
+                                    yPoints[1] = event.getY();
+
+                                    xPoints[2] = (initialClick.getKey() - (2 * (sideLength)));
+                                    yPoints[2] = initialClick.getValue();
+                                    if(currentFillColor != null){
+                                        gc.fillPolygon(xPoints, yPoints, 3);
+                                    }
+                                    else{
+                                        gc.strokePolygon(xPoints, yPoints, 3);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    pane.snapshot(null, wim);
+                }
+            });
+
+            }
+        });
+        
+        triangle.setToggleGroup(toggleGroup);
+        return triangle;
+    }
+    
+    private ToggleButton addPolygon(){
+        ToggleButton polygon = new ToggleButton("Draw Polygon");
+        
+        polygon.setOnAction(new EventHandler<ActionEvent>() {
+            
+            @Override
+            public void handle(ActionEvent event){
+                Stage tempstage = new Stage();
+                tempstage.setTitle("Draw Polygon");
+
+                GridPane grid = new GridPane();
+                grid.setAlignment(Pos.CENTER);
+                grid.setHgap(10);
+                grid.setVgap(10);
+                grid.setPadding(new Insets(25,25,25,25));
+
+                Label nlbl = new Label("Number of Sides: ");
+                grid.add(nlbl,0,1);
+                TextField n_field = new TextField();
+                grid.add(n_field, 1, 1);
+
+                Scene stageScene = new Scene(grid);
+                tempstage.setScene(stageScene);
+
+                tempstage.show();
+
+                tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+                    @Override
+                    public void handle(WindowEvent event){
+                        nSides = new Integer(n_field.getText());
+                        System.out.println(nSides);
+                    }
+                 });
+
+                canDraw= true;
+                straightLineSelected=false;
+                shapeSelected=true;
+
+                canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event){
+                        canvas.setWidth(imageView.getFitWidth());
+                        canvas.setHeight(imageView.getFitHeight());
+                        gc.setLineWidth(currentWidth);
+                        gc.setStroke(currentColor);
+                        gc.setFill(currentFillColor);
+                        
+                        initialClick = new Pair(event.getX(),event.getY());
+                        System.out.println(initialClick);
+
+                    }
+                });
+
+                canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        double centerX = initialClick.getKey();
+                        double centerY = initialClick.getValue();
+
+                        double radius = event.getX() - centerX;
+
+                        double[] xPoints = new double[nSides];
+                        double[] yPoints = new double[nSides];
+
+                        for(int i = 0; i < nSides; i++){
+                            xPoints[i] = (centerX + (radius * Math.cos(2*Math.PI * i / nSides)));
+                            yPoints[i] = (centerY + (radius * Math.sin(2*Math.PI * i / nSides)));
+                            System.out.println("Point" + i + ": " + xPoints[i] + " " + yPoints[i]);
+                        }
+
+                        gc.strokePolygon(xPoints, yPoints, nSides);
+                    }
+                });
+           }
+        });
+        polygon.setToggleGroup(toggleGroup);
+        return polygon;
     }
     
     private ToggleButton addSquare(){
@@ -812,6 +1079,7 @@ public class toolBar extends ToolBar{
     public WritableImage getWim(){
         return wim;
     }
+    
     public Boolean beenDrawnOn(){
         return drawnOn;
     }
