@@ -1,3 +1,41 @@
+Frankie's Paint Version 4.0 - 09/21/2020
+
+New Features:
+- More Shapes!
+	- Can now draw a triangle
+	- Can now draw a n-sided polygon
+- Eraser added
+	- Anything that was drawn on the canvas can be erased
+- Text Can be Added to the Image
+- Help Menu Update!
+	- Release Notes are now displayed in a more appealing format
+	- A guide to how to use each tool has been added!
+- New Keyboard Shortcuts
+	- Ctrl + A = Release Notes
+	- Ctrl + H = Tool Help Guide
+- Safe Save
+	- You will now be asked if you wish to save before closing the window!
+- Select Box!
+	- Parts of an image can be selected and dragged around the canvas!
+
+Known Issues: 
+- Safe Save seems to catch an error all the time. 
+- Need to click the "x" for the pop-up windows for both line color and line width in order for the selection to be saved. 
+- Color Grabber does not work.
+- Undo and Redo button does not work. 
+- Shapes and Lines are not updated live.
+
+Expected Next Sprint: 
+- Fixing the issues in the known issues.
+- Unit Testing
+- Auto-Save
+- JavaDoc for each method
+- Saving images in an alternate format. 
+
+Links:
+Demo: (Coming Soon)
+Github: https://github.com/fvazquez1/Paint 
+============================================================================================================================================================
 Frankie's Paint Version 3.0 - 09/11/2020
 
 New Features:
@@ -36,7 +74,7 @@ Expected Next Sprint:
 Links:
 Demo: (Coming Soon)
 Github: https://github.com/fvazquez1/Paint 
-================================================================================================================================================================
+============================================================================================================================================================
 Frankie's Paint Version 2.0 - 09/04/2020
 
 New Features:
