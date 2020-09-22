@@ -9,7 +9,10 @@ package paint;
 import java.awt.image.RenderedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
@@ -25,6 +28,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -78,11 +82,12 @@ public class Paint extends Application {
         primaryStage.setTitle("Paint");
         primaryStage.setScene(scene);
         primaryStage.show();
+        Platform.setImplicitExit(false);
         
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>(){
             @Override
             public void handle(WindowEvent event){
-                primaryStage.show();
+                event.consume();
                 if(!paint.menuBar.saved){
                     GridPane grid = new GridPane();
                     grid.setPadding(new Insets(25,25,25,25));
@@ -92,28 +97,58 @@ public class Paint extends Application {
                     grid.add(label, 0, 0);
                     grid.add(button,0,1);
                     Scene stageScene = new Scene(grid);
-                    primaryStage.setScene(stageScene);
-                    primaryStage.showAndWait();
+                    tempstage.setScene(stageScene);
+                    tempstage.show();
                     button.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event){
                             
                             try {
-                                    if(!drawnOn){
-                                        paint.menuBar.saved = true;
-                                        ImageIO.write(SwingFXUtils.fromFXImage(paint.menuBar.imageView.getImage(), null),"png",file);
-                                    }
-                                    else{
-                                       RenderedImage renderedImage = SwingFXUtils.fromFXImage(paint.menuBar.wim, null);
-                                       ImageIO.write(renderedImage, "png", file);  
-                                    }
-                                }    
-                                    catch (Exception e) {
-                                        System.out.println("Invalid selection.");
-                                    }
-
+                                if(!drawnOn){
+                                    paint.menuBar.saved = true;
+                                    ImageIO.write(SwingFXUtils.fromFXImage(paint.menuBar.imageView.getImage(), null),"png",file);
+                                }
+                                else{
+                                    FileChooser sFileChooser = new FileChooser();
+                                    sFileChooser.setTitle("Save As..");
+                                    sFileChooser.getExtensionFilters().addAll(
+                                        new FileChooser.ExtensionFilter("*.png","*.jpg"));
+                                        file = sFileChooser.showSaveDialog(primaryStage);
+                                        if (file != null) {
+                                            drawnOn = paint.toolBar.drawnOn;
+                                            paint.menuBar.wim = paint.toolBar.wim;
+                                            paint.menuBar.pane = paint.toolBar.pane;
+                                            paint.menuBar.undoStack.push(wim);
+                                            try {
+                                                if(!drawnOn){
+                                                    paint.menuBar.saved = true;
+                                                    ImageIO.write(SwingFXUtils.fromFXImage(paint.menuBar.imageView.getImage(), null),"png",file);
+                                                }
+                                                else{
+                                                   RenderedImage renderedImage = SwingFXUtils.fromFXImage(wim, null);
+                                                   ImageIO.write(renderedImage, "png", file);  
+                                                }
+                                            }    
+                                            catch (Exception e) {
+                                                System.out.println("Invalid selection.");
+                                            }  
+                                        }       
+                                }
                             }
+                            catch (Exception e) {
+                                System.out.println("Invalid selection.");
+                            }
+
+                        }
                         });
+                    tempstage.setOnCloseRequest(new EventHandler<WindowEvent>(){
+                        @Override
+                        public void handle(WindowEvent event){
+                            tempstage.close();
+                            primaryStage.close();
+                            Platform.exit();
+                        }
+                    });
                 }
             }
         });

@@ -19,18 +19,20 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.Slider;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -58,11 +60,11 @@ public class menuBar extends MenuBar{
     static GraphicsContext gc;
     static boolean drawnOn,saved;
     static Color currentColor;
-    static double currentWidth;
+    static double currentWidth,orgTranslateX, orgTranslateY,orgSceneX, orgSceneY;
     static Pane pane;
     static boolean straightLineSelected;
     static Pair<Double,Double> initialClick;
-    static Stack<WritableImage> undoStack;
+    static Stack<WritableImage> undoStack,redoStack;
     public menuBar(Stage stage) throws IOException{
         // Set up menu bar
         imageView = new ImageView();
@@ -74,6 +76,9 @@ public class menuBar extends MenuBar{
         this.addFile();
         this.addHelp();
         saved = false;
+        undoStack = new Stack<WritableImage>();
+        redoStack = new Stack<WritableImage>();
+        canvas = paint.menuBar.canvas;
         
         
 }
@@ -86,8 +91,10 @@ public class menuBar extends MenuBar{
         MenuItem save = addSaveImage();
         MenuItem clearImg = addClearImage();
         MenuItem undo = addUndo();
+        MenuItem redo = addRedo();
+        MenuItem select = addSelectBox();
         // Adds all the options to the file menu
-        mbFile.getItems().addAll(open,saveAs,save,undo,clearImg);
+        mbFile.getItems().addAll(open,saveAs,save,undo,redo,select,clearImg);
         // Adds the file menu to the menu bar
         this.getMenus().addAll(mbFile);
     }
@@ -96,7 +103,8 @@ public class menuBar extends MenuBar{
         final Menu mbHelp = new Menu("Help");
         
         MenuItem about = addAbout();
-        mbHelp.getItems().add(about);
+        MenuItem toolHelp = addToolHelp();
+        mbHelp.getItems().addAll(about,toolHelp);
         this.getMenus().addAll(mbHelp);
     }
     
@@ -114,7 +122,9 @@ public class menuBar extends MenuBar{
                 try {
                     Image image = new Image(new FileInputStream(file));
                     imageView.setImage(image);
-                    System.out.println("Pls print");
+                    WritableImage tempWim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
+                    pane.snapshot(null, tempWim);
+                    undoStack.push(tempWim);
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(Paint.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -123,6 +133,7 @@ public class menuBar extends MenuBar{
         });
         return open;
     }
+    
     private MenuItem addSaveAsImage(){
         // Adding save image option under file menu
         MenuItem saveAs = new MenuItem("Save As...");
@@ -158,6 +169,7 @@ public class menuBar extends MenuBar{
         saveAs.setAccelerator(new KeyCodeCombination(KeyCode.S,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
         return saveAs;
     }
+    
     private MenuItem addSaveImage(){
         MenuItem save = new MenuItem("Save");
         save.setOnAction(new EventHandler<ActionEvent>() {
@@ -186,27 +198,54 @@ public class menuBar extends MenuBar{
         return save;
     }
     
+    private MenuItem addRedo(){
+        MenuItem redo = new MenuItem("Redo");
+        
+        redo.setOnAction(new EventHandler<ActionEvent>() {
+           @Override
+           public void handle(ActionEvent event){
+               paint.toolBar.wim = redo();
+           }
+        });
+        redo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
+        return redo;
+    }
+    
+    private WritableImage redo(){
+        WritableImage recent = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
+        
+        try{
+            recent = redoStack.pop();
+            undoStack.push(paint.toolBar.wim);
+        }
+        catch(Exception e){
+            System.out.println("Nothing to undo");
+        }
+        
+        return recent;
+    }
+    
     private MenuItem addUndo(){
         MenuItem undo = new MenuItem("Undo");
         
         undo.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
-                undo();
+                paint.toolBar.wim = undo();
             }
         });
-        undo.setAccelerator(new KeyCodeCombination(KeyCode.U,KeyCombination.CONTROL_DOWN));
+        undo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN));
         return undo;
     }
     
     private WritableImage undo(){
-        WritableImage last = wim;
-        undoStack = paint.toolBar.undoStack;
+        WritableImage last = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         try{
             last = undoStack.pop();
+            redoStack.push(paint.toolBar.wim);
         }
         catch(Exception e){
-            System.out.println("Nothing to undo");
+            System.out.println("Nothing to redo");
         }
         return last;
     }
@@ -222,29 +261,129 @@ public class menuBar extends MenuBar{
         });
         return clearImg;
     }
+    
+    private MenuItem addSelectBox(){
+        MenuItem select = new MenuItem("Select");
+        
+        select.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                
+                toolBar.canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event){
+                        initialClick = new Pair(event.getX(),event.getY());
+                    }
+                });
+                
+                toolBar.canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event){
+                        try{
+                            WritableImage selectedImg = new WritableImage(imageView.getImage().getPixelReader(),(int)Math.round(initialClick.getKey()),(int)Math.round(initialClick.getValue()),Math.abs((int)(event.getX()-initialClick.getKey())),Math.abs((int)(event.getY()-initialClick.getValue())));
+                            SnapshotParameters params = new SnapshotParameters();
+                            //Rectangle2D selectedRect = new Rectangle2D(initialClick.getKey(), initialClick.getValue(),Math.abs(event.getY()-initialClick.getValue()),Math.abs(event.getX()-initialClick.getKey()));
+                            Rectangle2D selectedRect = new Rectangle2D(Math.round(initialClick.getKey())+150, Math.round(initialClick.getValue()),Math.abs(event.getY()-initialClick.getValue()),Math.abs(event.getX()-initialClick.getKey())+150);
+                            params.setViewport(selectedRect);
+                            
+                            pane.snapshot(params, selectedImg);
+                            ImageView selectedImgView = new ImageView(selectedImg);
+                            selectedImgView.setOnMousePressed(new EventHandler<MouseEvent>(){
+                                @Override
+                                public void handle(MouseEvent event){
+                                    orgSceneX = event.getSceneX();
+                                    orgSceneY = event.getSceneY();
+                                    orgTranslateX = ((ImageView)(event.getSource())).getTranslateX();
+                                    orgTranslateY = ((ImageView)(event.getSource())).getTranslateY();
+                                }
+                            });
+                            selectedImgView.setOnMouseDragged(new EventHandler<MouseEvent>() {
+                                @Override
+                                public void handle(MouseEvent event){
+                                    double offsetX = event.getSceneX() - orgSceneX;
+                                    double offsetY = event.getSceneY() - orgSceneY;
+                                    double newTranslateX = orgTranslateX + offsetX;
+                                    double newTranslateY = orgTranslateY + offsetY;
+
+                                    ((ImageView)(event.getSource())).setTranslateX(newTranslateX);
+                                    ((ImageView)(event.getSource())).setTranslateY(newTranslateY);
+                                }
+                            });
+                            pane.getChildren().add(selectedImgView);
+                            
+                            
+                        }
+                        catch(Exception e){
+                            System.out.println("Almost got an error lol");
+                        }
+
+                        gc = paint.toolBar.gc;
+                        gc.setFill(Color.WHITE);
+                        gc.fillRect((int)Math.round(initialClick.getKey()),(int)Math.round(initialClick.getValue()),Math.abs((int)(event.getX()-initialClick.getKey())),Math.abs((int)(event.getY()-initialClick.getValue())));
+                    }
+                });
+            }
+        });
+        
+        return select;
+    }
+    
     public ImageView getImageView(){
         return imageView;
     }
     
     private MenuItem addAbout() throws IOException{
-        MenuItem about = new MenuItem("About");
-        Popup popup = new Popup();
+        MenuItem about = new MenuItem("Release Notes");
+
         String text = new String(Files.readAllBytes(Paths.get("C:\\Users\\Francisco Vazquez\\Documents\\cs250\\Paint\\src\\paint\\ReleaseNotes.txt")) );
         Label abtLabel = new Label(text);
         abtLabel.setStyle(" -fx-background-color: white;");
-        popup.getContent().add(abtLabel);
-        popup.setAutoHide(true);
+
+        
+        ScrollPane scroll = new ScrollPane();
+        Stage tempstage = new Stage();
+        scroll.setContent(abtLabel);
+        Scene stageScene = new Scene(scroll);
+        tempstage.setScene(stageScene);
+        tempstage.setMaxHeight(900);
+        tempstage.setTitle("Release Notes");
+        
         about.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
-                if (!popup.isShowing()) 
-                    popup.show(primaryStage);
+                tempstage.show();
             }
         });
-        about.setAccelerator(new KeyCodeCombination(KeyCode.H,KeyCombination.CONTROL_DOWN));
+        about.setAccelerator(new KeyCodeCombination(KeyCode.A,KeyCombination.CONTROL_DOWN));
         return about; 
     }
 
+    private MenuItem addToolHelp() throws IOException{
+        MenuItem toolHelp = new MenuItem("How to Use Tools");
+
+        String text = new String(Files.readAllBytes(Paths.get("C:\\Users\\Francisco Vazquez\\Documents\\cs250\\Paint\\src\\paint\\toolBar_functionHelp.txt")) );
+        Label abtLabel = new Label(text);
+        abtLabel.setStyle(" -fx-background-color: white;");
+
+
+        ScrollPane scroll = new ScrollPane();
+        Stage tempstage = new Stage();
+        scroll.setContent(abtLabel);
+        Scene stageScene = new Scene(scroll);
+        tempstage.setScene(stageScene);
+        tempstage.setMaxHeight(900);
+        tempstage.setTitle("Tool Bar Help");
+
+        toolHelp.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                tempstage.show();
+            }
+        });
+        toolHelp.setAccelerator(new KeyCodeCombination(KeyCode.H,KeyCombination.CONTROL_DOWN));
+        return toolHelp; 
+    }
+    
     public void setDrawnOn(boolean beenDrawnOn){
         drawnOn = beenDrawnOn;
     }

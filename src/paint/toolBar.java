@@ -76,6 +76,7 @@ public class toolBar extends ToolBar{
     
     private ToggleButton addDrawLine() { 
         ToggleButton drawLine = new ToggleButton("Draw Line");
+//        Canvas tempCanvas = new Canvas(canvas.getWidth(),canvas.getHeight());
         drawLine.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
@@ -100,8 +101,10 @@ public class toolBar extends ToolBar{
                         if (canDraw && straightLineSelected){
                             initialClick = new Pair(event.getX(),event.getY());
                         }
+                        
                     }
                 });
+
 
                 canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, 
                         new EventHandler<MouseEvent>(){
@@ -109,10 +112,10 @@ public class toolBar extends ToolBar{
                         @Override
                         public void handle(MouseEvent event) {
                             if (canDraw && straightLineSelected){
-                                gc.setLineWidth(currentWidth);
-                                gc.setStroke(currentColor);
+                                gc = paint.toolBar.gc;
                                 gc.strokeLine(initialClick.getKey(), initialClick.getValue(), event.getX(), event.getY());
                                 pane.snapshot(null, wim);
+                                
                                 //undoStack.push(wim);
                             }
                         }
@@ -507,11 +510,13 @@ public class toolBar extends ToolBar{
 
                         xPoints[2] = (event.getX() - (2 * (sideLength)));
                         yPoints[2] = event.getY();
-                        if(currentFillColor != null){
-                            gc.fillPolygon(xPoints, yPoints, 3);
-                        }
-                        else{
-                            gc.strokePolygon(xPoints, yPoints, 3);
+                        if (currentShape == "tri"){
+                            if(currentFillColor != null){
+                                gc.fillPolygon(xPoints, yPoints, 3);
+                            }
+                            else{
+                                gc.strokePolygon(xPoints, yPoints, 3);
+                            }
                         }
                     }
                     else{
@@ -529,11 +534,13 @@ public class toolBar extends ToolBar{
 
                             xPoints[2] = (event.getX() + (2 * (sideLength)));
                             yPoints[2] = event.getY();
-                            if(currentFillColor != null){
-                                gc.fillPolygon(xPoints, yPoints, 3);
-                            }
-                            else{
-                                gc.strokePolygon(xPoints, yPoints, 3);
+                            if (currentShape == "tri"){
+                                if(currentFillColor != null){
+                                    gc.fillPolygon(xPoints, yPoints, 3);
+                                }
+                                else{
+                                    gc.strokePolygon(xPoints, yPoints, 3);
+                                }
                             }
                         }
                         else{
@@ -550,11 +557,13 @@ public class toolBar extends ToolBar{
 
                                 xPoints[2] = (initialClick.getKey() + (2 * (sideLength)));
                                 yPoints[2] = initialClick.getValue();
-                                if(currentFillColor != null){
-                                    gc.fillPolygon(xPoints, yPoints, 3);
-                                }
-                                else{
-                                    gc.strokePolygon(xPoints, yPoints, 3);
+                                if (currentShape == "tri"){
+                                    if(currentFillColor != null){
+                                        gc.fillPolygon(xPoints, yPoints, 3);
+                                    }
+                                    else{
+                                        gc.strokePolygon(xPoints, yPoints, 3);
+                                    }
                                 }
                             }
                             else{
@@ -571,11 +580,13 @@ public class toolBar extends ToolBar{
 
                                     xPoints[2] = (initialClick.getKey() - (2 * (sideLength)));
                                     yPoints[2] = initialClick.getValue();
-                                    if(currentFillColor != null){
-                                        gc.fillPolygon(xPoints, yPoints, 3);
-                                    }
-                                    else{
-                                        gc.strokePolygon(xPoints, yPoints, 3);
+                                    if (currentShape == "tri"){
+                                        if(currentFillColor != null){
+                                            gc.fillPolygon(xPoints, yPoints, 3);
+                                        }
+                                        else{
+                                            gc.strokePolygon(xPoints, yPoints, 3);
+                                        }
                                     }
                                 }
                             }
@@ -631,7 +642,8 @@ public class toolBar extends ToolBar{
                 canDraw= true;
                 straightLineSelected=false;
                 shapeSelected=true;
-
+                currentShape = "poly";
+                
                 canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event){
@@ -663,8 +675,9 @@ public class toolBar extends ToolBar{
                             yPoints[i] = (centerY + (radius * Math.sin(2*Math.PI * i / nSides)));
                             System.out.println("Point" + i + ": " + xPoints[i] + " " + yPoints[i]);
                         }
-
-                        gc.strokePolygon(xPoints, yPoints, nSides);
+                        if (canDraw && shapeSelected && currentShape == "poly"){
+                            gc.strokePolygon(xPoints, yPoints, nSides);
+                        }
                     }
                 });
            }
@@ -934,20 +947,24 @@ public class toolBar extends ToolBar{
                                 if ((event.getX()-initialClick.getKey() >= 0) && (event.getY()-initialClick.getValue()>=0)){
                                     if((event.getX()-initialClick.getKey())>(event.getY()-initialClick.getValue())){
                                         double lesser = event.getY()-initialClick.getValue();
-                                        if(currentFillColor != null){
-                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
-                                        }
-                                        else{
-                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if (currentShape == "circle"){
+                                            if(currentFillColor != null){
+                                                gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                            }
+                                            else{
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                            }
                                         }
                                     }
                                     else{
                                         double lesser = event.getX()-initialClick.getValue();
-                                        if(currentFillColor != null){
-                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
-                                        }
-                                        else{
-                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                        if (currentShape == "circle"){
+                                            if(currentFillColor != null){
+                                                gc.fillOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                            }
+                                            else{
+                                                gc.strokeOval(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
+                                            }
                                         }
                                     }
                                 }
@@ -960,19 +977,23 @@ public class toolBar extends ToolBar{
                                         double height = Math.abs(originalY - initialClick.getValue());
 
                                         if(width < height){
-                                            if(currentFillColor != null){
-                                                gc.fillOval(event.getX(), event.getY(), width, width);
-                                            }
-                                            else{
-                                                gc.strokeOval(event.getX(), event.getY(), width, width);
+                                            if (currentShape == "circle"){
+                                                if(currentFillColor != null){
+                                                    gc.fillOval(event.getX(), event.getY(), width, width);
+                                                }
+                                                else{
+                                                    gc.strokeOval(event.getX(), event.getY(), width, width);
+                                                }
                                             }
                                         }
                                         else{
-                                            if(currentFillColor != null){
-                                                gc.fillOval(event.getX(), event.getY(), height, height);
-                                            }
-                                            else{
-                                                gc.strokeOval(event.getX(), event.getY(), height, height);
+                                            if (currentShape == "circle"){
+                                                if(currentFillColor != null){
+                                                    gc.fillOval(event.getX(), event.getY(), height, height);
+                                                }
+                                                else{
+                                                    gc.strokeOval(event.getX(), event.getY(), height, height);
+                                                }
                                             }
                                         }
                                     }    
@@ -983,32 +1004,7 @@ public class toolBar extends ToolBar{
                                             initialClick = new Pair(originalX,event.getY());
                                             double width = Math.abs(originalX - initialClick.getKey());
                                             double height = Math.abs(originalY - initialClick.getValue());
-
-                                            if(width < height){
-                                                if(currentFillColor != null){
-                                                    gc.fillOval(initialClick.getKey(), initialClick.getValue(), width, width);
-                                                }
-                                                else{
-                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
-                                                }
-                                            }
-                                            else{
-                                                if(currentFillColor != null){
-                                                    gc.fillOval(initialClick.getKey(), initialClick.getValue(), height, height);
-                                                }
-                                                else{
-                                                    gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
-                                                }
-                                            }
-                                        }
-                                        else{
-                                            if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
-                                                double originalX = initialClick.getKey();
-                                                double originalY = initialClick.getValue();
-                                                initialClick = new Pair(event.getX(),event.getY());
-                                                double width = Math.abs(originalX - initialClick.getKey());
-                                                double height = Math.abs(originalY - initialClick.getValue());
-
+                                            if (currentShape == "circle"){
                                                 if(width < height){
                                                     if(currentFillColor != null){
                                                         gc.fillOval(initialClick.getKey(), initialClick.getValue(), width, width);
@@ -1023,6 +1019,33 @@ public class toolBar extends ToolBar{
                                                     }
                                                     else{
                                                         gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else{
+                                            if((event.getX()-initialClick.getKey() < 0) && (event.getY()-initialClick.getValue()<0)){
+                                                double originalX = initialClick.getKey();
+                                                double originalY = initialClick.getValue();
+                                                initialClick = new Pair(event.getX(),event.getY());
+                                                double width = Math.abs(originalX - initialClick.getKey());
+                                                double height = Math.abs(originalY - initialClick.getValue());
+                                                if (currentShape == "circle"){
+                                                    if(width < height){
+                                                        if(currentFillColor != null){
+                                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                        }
+                                                        else{
+                                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), width, width);
+                                                        }
+                                                    }
+                                                    else{
+                                                        if(currentFillColor != null){
+                                                            gc.fillOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                        }
+                                                        else{
+                                                            gc.strokeOval(initialClick.getKey(), initialClick.getValue(), height, height);
+                                                        }
                                                     }
                                                 }
                                             }
