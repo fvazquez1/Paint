@@ -1,0 +1,145 @@
+How To Use Tools in the Tool Bar:
+
+====================================================================================================
+NOTE: All buttons in the Tool Bar have the option to be toggled. All of these buttons will untoggle 
+the others, EXCEPT for "Select Line Color", "Select fill Color", and "Set Line Width".
+====================================================================================================
+
+TOOLS:
++--------+
+| Eraser |
++--------+
+
+Click and drag to erase anything that has been drawn, inlcuding parts of shapes.
+The eraser works like a pencil eraser would, in the sense that only the part that 
+is dragged over will be erased. The line width will affect the eraser size. 
+
+===================================================================================
++-----------+
+| Draw Line |
++-----------+
+
+Click and drag to draw a straight line. The line will start from the original click, 
+and will go to the point where the mouse is released. Line width, and line color 
+affect the size and color of the line. 
+
+===================================================================================
++----------------+
+| Free Draw Line |
++----------------+
+
+Click and drag to draw a line where ever the mouse goes. This works similar to how 
+writing with a pencil would work. Line width, and line color affect the size and 
+color of the line. 
+
+===================================================================================
++---------------+
+| Draw Triangle |
++---------------+
+
+This will draw an isoceles triangle every time. Clicking-and-dragging similar to 
+the "Draw Line" is necessary. The line drawn from the original click to the 
+point where the mouse is released will be one of the two equal sides in the 
+isoceles triangle. The length of the final side is determined by the difference in
+X-position between the original click, and the point where the mouse is released.
+The length of the final side is double whatever the difference is. For example, if
+the mouse is clicked at position (0,0), and is release at position (5,0), the final
+side will be double the difference, so 10. This third side will always be the base
+of the triangle, and will always be perfectly horizontal. Line width, line color, 
+and fill color affect the triangle. 
+
+===================================================================================
++-------------+
+| Draw Square |
++-------------+
+
+In order to draw a square, the mouse must be clicked and then dragged either 
+up-and-to-the-left or down-and-to-the-right. A square will be drawn with sides 
+equal to the difference in Y-position between the original click and the point 
+where the mouse is released. For example, if the mouse is clicked at (0,0), and is
+relased at (25,5), a 5-by-5 square will be drawn. Line width, line color, and fill
+color affect the square.
+
+===================================================================================
++--------------+
+| Draw Ellipse |
++--------------+
+
+The ellipse is drawn inside of an imaginary rectangle created by the click and drag
+of the mouse. The original mouse click sets the first point for the rectangle, and 
+the point where the mouse is released sets the point that is diagonally across from
+the original click. The ellipse will intersect this imaginary rectangle at the 
+midpoint of each of the four sides. Line width, line color, and fill color affect 
+the ellipse. 
+
+===================================================================================
++-------------+
+| Draw Circle |
++-------------+
+
+The circle is drawn inside of an imaginary square (see "Draw Square"). The circle
+intersects this square at the midpoint of each of the four sides. Also like the 
+square, it can only be drawn if the mouse is dragged up-and-to-the-left or 
+down-and-to-the-right of the original click. 
+
+===================================================================================
++--------------+
+| Draw Polygon |
++--------------+
+
+When clicked, the polygon requires the user to input a number of sides for the 
+polygon. The pop-up window will not close unless a number is inputed. To draw the
+polygon, just click and drag like the other shapes. The polygon will be drawn upon 
+release of the drag. The length of the drag determines the "radius" of an imaginary
+circle that the polygon will be drawn in. This means the initial click will be the 
+center of the polygon.
+
+===================================================================================
++-------------------+
+| Select Line Color |
++-------------------+
+
+Clicking this opens up a color-chooser. By default, the color is black. In order to
+save the chosen color, the "x" of the window must be clicked. After this, the color
+is set. The line color will affect all shapes, and both types of line drawing. 
+
+===================================================================================
++-------------------+
+| Select Fill Color |
++-------------------+
+
+This works similar to the line color chooser, in the sense that the "x" must be
+clicked to save the color. By default, the color is set to transparent. When the 
+color is switched to anything besides transparent, the line color is no longer 
+used and the entire shape will be the chosen color. To go back to non-filled shapes
+just set the color back to transparent. To do so, select "custom color" and set 
+every value to 0. Then select "use", the color will then appear in the color 
+chooser as transparent. 
+
+===================================================================================
++------------+
+| Grab Color |
++------------+
+
+NOT YET USABLE
+
+===================================================================================
++----------------+
+| Set Line Width |
++----------------+
+
+Clicking this opens up a small window with a slider. Move the slider to set the 
+line width. The "x" on the window must be clicked to save the desired line width.
+The line width affects all lines, and shapes. 
+
+===================================================================================
++-------------+
+| Insert Text |
++-------------+
+
+Clicking this will open a small window with a text-input area. Enter whatever the 
+desired text to be inserted is. Changing the line width will determine the font 
+size. Line color will also change the color of the font. Click the "x" of the small
+pop up window to save the text, then click anywhere on the canvas to print the text.
+To stop printing text, toggle the button again, and simply click the "x" when 
+prompted to input any text. 
