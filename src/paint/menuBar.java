@@ -65,6 +65,12 @@ public class menuBar extends MenuBar{
     static boolean straightLineSelected;
     static Pair<Double,Double> initialClick;
     static Stack<WritableImage> undoStack,redoStack;
+    /**
+     * Constructor for menuBar object. This class extends the JavaFX object MenuBar. 
+     * 
+     * @param stage the Stage that the menu bar will be displayed on.
+     * @throws IOException 
+     */
     public menuBar(Stage stage) throws IOException{
         // Set up menu bar
         imageView = new ImageView();
@@ -82,6 +88,10 @@ public class menuBar extends MenuBar{
         
         
 }
+    /**
+     * Sets up and adds the File menu to the menuBar. All MenuItems are instantiated,
+     * and added to the File menu. The File Menu is then added to the menuBar. 
+     */
     public void addFile(){
         // Creating the file option in the menu bar
         final Menu mbFile = new Menu("File");
@@ -98,7 +108,11 @@ public class menuBar extends MenuBar{
         // Adds the file menu to the menu bar
         this.getMenus().addAll(mbFile);
     }
-    
+    /**
+     * Sets up and adds the Help menu to the menuBar. All the MenuItems are instantiated,
+     * and added to the Help menu. The Help Menu is then added to the menuBar.
+     * @throws IOException 
+     */
     public void addHelp() throws IOException{
         final Menu mbHelp = new Menu("Help");
         
@@ -107,7 +121,12 @@ public class menuBar extends MenuBar{
         mbHelp.getItems().addAll(about,toolHelp);
         this.getMenus().addAll(mbHelp);
     }
-    
+    /**
+     * MenuItem for "Open Image" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the opening the FileChooser and following opening
+     * of the chosen image. 
+     * @return "Open Image" MenuItem 
+     */
     private MenuItem addOpenImage(){
         final FileChooser fileChooser = new FileChooser();
         // Adding open image option to the file menu
@@ -133,7 +152,12 @@ public class menuBar extends MenuBar{
         });
         return open;
     }
-    
+    /**
+     *MenuItem for "Save As.." is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the opening the FileChooser as well as the saving
+     *  of the image at the specified file location. 
+     * @return "Save As.." MenuItem  
+     */
     private MenuItem addSaveAsImage(){
         // Adding save image option under file menu
         MenuItem saveAs = new MenuItem("Save As...");
@@ -169,7 +193,12 @@ public class menuBar extends MenuBar{
         saveAs.setAccelerator(new KeyCodeCombination(KeyCode.S,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
         return saveAs;
     }
-    
+    /**
+     * MenuItem for "Save" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the saving of the current image that is open. 
+     * The image is saved at the already existing file location. 
+     * @return "Save" MenuItem
+     */
     private MenuItem addSaveImage(){
         MenuItem save = new MenuItem("Save");
         save.setOnAction(new EventHandler<ActionEvent>() {
@@ -197,7 +226,12 @@ public class menuBar extends MenuBar{
         
         return save;
     }
-    
+    /**
+     * MenuItem for "Redo" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the call to redo() as well as setting the current 
+     * image to what is pushed off of the redo stack.
+     * @return "Redo" MenuItem
+     */
     private MenuItem addRedo(){
         MenuItem redo = new MenuItem("Redo");
         
@@ -210,7 +244,12 @@ public class menuBar extends MenuBar{
         redo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
         return redo;
     }
-    
+    /**
+     * Manages the redo stack containing images that can potentially be redone. 
+     * A stack of WritableImages are stored in a stack, and when this method is
+     * called, the last change to an image is redone. 
+     * @return WritableImage of the image with the last change redone
+     */
     private WritableImage redo(){
         WritableImage recent = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         
@@ -224,7 +263,12 @@ public class menuBar extends MenuBar{
         
         return recent;
     }
-    
+    /**
+     * MenuItem for "Undo" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the call to undo() as well as setting the current 
+     * image to what is pushed off of the undo stack.
+     * @return "Undo" MenuItem
+     */
     private MenuItem addUndo(){
         MenuItem undo = new MenuItem("Undo");
         
@@ -237,7 +281,12 @@ public class menuBar extends MenuBar{
         undo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN));
         return undo;
     }
-    
+    /**
+     * Manages the undo stack containing images that can potentially be undone. 
+     * A stack of WritableImages are stored in a stack, and when this method is
+     * called, the most recent change to an image is undone. 
+     * @return WritableImage of the image without the most recent change
+     */
     private WritableImage undo(){
         WritableImage last = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
         try{
@@ -249,7 +298,12 @@ public class menuBar extends MenuBar{
         }
         return last;
     }
-    
+    /**
+     * MenuItem for "Clear Image" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the removal of the current image and all  
+     * drawings being displayed.
+     * @return "Clear Image" MenuItem
+     */
     private MenuItem addClearImage(){
         // Adding clear image option under file
         MenuItem clearImg = new MenuItem("Clear Image");
@@ -257,11 +311,19 @@ public class menuBar extends MenuBar{
             @Override // Resets the window to show nothing
             public void handle(ActionEvent event){
                 imageView.setImage(null);
+                paint.toolBar.gc.clearRect(0, 0, 2000, 2000);
             }
         });
         return clearImg;
     }
-    
+    /**
+     * MenuItem for "Select" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the selection of the desired part of the current image,
+     * then opens the desired part of the image in the middle of the canvas. A
+     * separate EventHandler is made to handle the movement of the desire part of
+     * the image. 
+     * @return "Select" MenuItem
+     */
     private MenuItem addSelectBox(){
         MenuItem select = new MenuItem("Select");
         
@@ -282,7 +344,6 @@ public class menuBar extends MenuBar{
                         try{
                             WritableImage selectedImg = new WritableImage(imageView.getImage().getPixelReader(),(int)Math.round(initialClick.getKey()),(int)Math.round(initialClick.getValue()),Math.abs((int)(event.getX()-initialClick.getKey())),Math.abs((int)(event.getY()-initialClick.getValue())));
                             SnapshotParameters params = new SnapshotParameters();
-                            //Rectangle2D selectedRect = new Rectangle2D(initialClick.getKey(), initialClick.getValue(),Math.abs(event.getY()-initialClick.getValue()),Math.abs(event.getX()-initialClick.getKey()));
                             Rectangle2D selectedRect = new Rectangle2D(Math.round(initialClick.getKey())+150, Math.round(initialClick.getValue()),Math.abs(event.getY()-initialClick.getValue()),Math.abs(event.getX()-initialClick.getKey())+150);
                             params.setViewport(selectedRect);
                             
@@ -327,11 +388,20 @@ public class menuBar extends MenuBar{
         
         return select;
     }
-    
+    /**
+     * Returns the ImageView being used by the menuBar.
+     * @return ImageView
+     */
     public ImageView getImageView(){
         return imageView;
     }
-    
+    /**
+     * MenuItem for "Release Notes" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the opening of a separate window to display the 
+     * most current release notes. 
+     * @return "Release Notes" MenuItem
+     * @throws IOException 
+     */
     private MenuItem addAbout() throws IOException{
         MenuItem about = new MenuItem("Release Notes");
 
@@ -357,7 +427,13 @@ public class menuBar extends MenuBar{
         about.setAccelerator(new KeyCodeCombination(KeyCode.A,KeyCombination.CONTROL_DOWN));
         return about; 
     }
-
+    /**
+     * MenuItem for "How to Use Tools" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the opening of a separate window to display the 
+     * most current tool help file.  
+     * @return "How to Use Tools" MenuItem
+     * @throws IOException 
+     */
     private MenuItem addToolHelp() throws IOException{
         MenuItem toolHelp = new MenuItem("How to Use Tools");
 
@@ -383,15 +459,29 @@ public class menuBar extends MenuBar{
         toolHelp.setAccelerator(new KeyCodeCombination(KeyCode.H,KeyCombination.CONTROL_DOWN));
         return toolHelp; 
     }
-    
+    /**
+     * Sets a new boolean value to the variable drawnOn that indicates if any 
+     * drawing has been done on the image. This variable helps determine how to 
+     * save the current image. 
+     * @param beenDrawnOn boolean indicating whether the current image has been 
+     * drawn on. 
+     */
     public void setDrawnOn(boolean beenDrawnOn){
         drawnOn = beenDrawnOn;
     }
-    
+    /**
+     * Sets the current WritableImage to a new WritableImage. The WritableImage
+     * is used in multiple methods, and should only be changed or set when necessary. 
+     * @param wim New WritableImage to be used
+     */
     public void setWim(WritableImage wim) {
         this.wim = wim;
     }
-    
+    /**
+     * Sets the current Pane to a new Pane. This Pane is used primarily to save 
+     * the current image with any potential changes made to it.
+     * @param pane New Pane to be used
+     */
     public void setPane(Pane pane){
         this.pane = pane;
     }
