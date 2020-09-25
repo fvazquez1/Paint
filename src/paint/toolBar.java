@@ -38,7 +38,11 @@ import javafx.stage.WindowEvent;
 import javafx.util.Pair;
 
 /**
- *
+ * Custom ToolBar class for Paint.java
+ * <P>
+ * Anything housed in the ToolBar is found in this class. All ToggleButtons, 
+ * necessary EventHandlers, and necessary variables are in this class. The toolBar
+ * handles all drawing capabilities.
  * @author Francisco Vazquez
  */
 public class toolBar extends ToolBar{
@@ -58,7 +62,11 @@ public class toolBar extends ToolBar{
     static String currentText = "";
     static Stack<WritableImage> undoStack;
     static Integer nSides;
-    
+    /**
+     * Constructor for toolBar object. 
+     * @param stage Stage to display the toolBar on
+     * @param imageView ImageView being used by the stage
+     */
     public toolBar(Stage stage,ImageView imageView){
         this.stage = stage; 
         currentColor = Color.BLACK;
@@ -73,10 +81,13 @@ public class toolBar extends ToolBar{
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
     }
-    
+    /**
+     * ToggleButton for "Draw Line" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of a straight line on the canvas. 
+     * @return "Draw Line" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addDrawLine() { 
         ToggleButton drawLine = new ToggleButton("Draw Line");
-//        Canvas tempCanvas = new Canvas(canvas.getWidth(),canvas.getHeight());
         drawLine.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
@@ -128,7 +139,13 @@ public class toolBar extends ToolBar{
         
         return drawLine;
     }
-    
+    /**
+     * ToggleButton for "Free Draw Line" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the free drawing of a line on the canvas. The line
+     * drawing starts from the point where the mouse is clicked, and is drawn 
+     * to the position of the mouse as long as it is being held down. 
+     * @return "Free Draw Line" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addFreeDrawLine() {
         ToggleButton freeLine = new ToggleButton("Free Draw Line");
         freeLine.setOnAction(new EventHandler<ActionEvent>() {
@@ -189,7 +206,13 @@ public class toolBar extends ToolBar{
         
         return freeLine;
     }
-    
+    /**
+     * Button for "Select Line Color" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the changing of the line color by opening a
+     * separate window with a ColorChooser. The color is only saved when the 
+     * window that was opened is closed.
+     * @return "Select Line Color" ToggleButton to be added to the toolBar
+     */
     private Button addLineColor(){
         Button lineColor = new Button("Select Line Color"); 
         ColorPicker colorpicker = new ColorPicker(Color.BLACK);
@@ -217,9 +240,15 @@ public class toolBar extends ToolBar{
         });
         return lineColor;
     }
-    
+    /**
+     * Button for "Select Fill Color" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the changing of the fill color by opening a
+     * separate window with a ColorChooser. The color is only saved when the 
+     * window that was opened is closed.
+     * @return "Select Fill Color" ToggleButton to be added to the toolBar
+     */
     private Button addFillColor(){
-        Button fillColor = new Button("Select fill Color"); 
+        Button fillColor = new Button("Select Fill Color"); 
         ColorPicker colorpicker = new ColorPicker(Color.TRANSPARENT);
         fillColor.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -242,7 +271,13 @@ public class toolBar extends ToolBar{
         });
         return fillColor;
     }
-    
+    /**
+     * Button for "Set Line Width" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the changing of the line width by opening a
+     * separate window with a Slider. The color is only saved when the 
+     * window that was opened is closed.
+     * @return "Select Line Color" ToggleButton to be added to the toolBar
+     */
     private Button addLineWidth(){
         Button lineWidth = new Button("Set Line Width");
         Slider slider = new Slider(1,20,1);
@@ -255,10 +290,11 @@ public class toolBar extends ToolBar{
             @Override
             public void handle(ActionEvent event){
                 StackPane stack = new StackPane();
-                stack.setPadding(new Insets(25,25,25,25));
+                stack.setPadding(new Insets(15,15,15,15));
                 Stage tempstage = new Stage();
                 stack.getChildren().add(slider);
                 Scene stageScene = new Scene(stack);
+                tempstage.setWidth(425);
                 tempstage.setScene(stageScene);
                 
                 tempstage.show();
@@ -273,7 +309,13 @@ public class toolBar extends ToolBar{
         
         return lineWidth;
     }
-    
+    /**
+     * ToggleButton for "Insert Text" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the setting of the desired text to be printed by 
+     * opening a separate window with a TextArea for the user to input their desired
+     * text. The text is only saved when the window that was opened is closed.
+     * @return "Insert Text" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addTextBox(){
         ToggleButton txtBox = new ToggleButton("Insert Text");
         
@@ -323,7 +365,14 @@ public class toolBar extends ToolBar{
         
         return txtBox;
     }
-    
+    /**
+     * ToggleButton for "Draw Rectangle" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of a rectangle on the canvas. The 
+     * rectangle is drawn by clicking and dragging. The rectangle will be drawn 
+     * staring where the mouse is clicked, then drawn to the point where the mouse 
+     * is released. 
+     * @return "Draw Rectangle" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addRectangle(){
         ToggleButton rectangle = new ToggleButton("Draw Rectangle");
         
@@ -417,7 +466,13 @@ public class toolBar extends ToolBar{
         rectangle.setToggleGroup(toggleGroup);
         return rectangle;
     }
-    
+    /**
+     * ToggleButton for "Eraser" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the erasing of anything that was drawn. The eraser
+     * works similarly to the Free Draw Line. 
+     * @return "Eraser" ToggleButton to be added to the toolBar
+     * @see addFreeDrawLine()
+     */
     private ToggleButton addEraser(){
         ToggleButton eraser = new ToggleButton("Eraser");
         
@@ -464,7 +519,15 @@ public class toolBar extends ToolBar{
         eraser.setToggleGroup(toggleGroup);
         return eraser;
     }
-    
+    /**
+     * ToggleButton for "Draw Triangle" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of an isosceles triangle on the canvas. The 
+     * triangle is drawn by clicking and dragging. The triangle will be drawn 
+     * staring where the mouse is clicked, then one of the two equal sides is 
+     * drawn to the point where the mouse is released. The triangle is then symmetrically 
+     * drawn from the peak or trough of the triangle. 
+     * @return "Draw Triangle" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addTriangle(){
         ToggleButton triangle = new ToggleButton("Draw Triangle");
         
@@ -603,7 +666,15 @@ public class toolBar extends ToolBar{
         triangle.setToggleGroup(toggleGroup);
         return triangle;
     }
-    
+    /**
+     * ToggleButton for "Draw Polygon" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of a n-sided polygon on the canvas. The 
+     * polygon is drawn by clicking and dragging. The polygon will be drawn
+     * within an imaginary circle using a  radius staring where the mouse is 
+     * clicked to the point where the mouse is released. The points of the polygon 
+     * are then calculated, and the polygon is drawn. 
+     * @return "Draw Polygon" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addPolygon(){
         ToggleButton polygon = new ToggleButton("Draw Polygon");
         
@@ -685,7 +756,17 @@ public class toolBar extends ToolBar{
         polygon.setToggleGroup(toggleGroup);
         return polygon;
     }
-    
+    /**
+     * ToggleButton for "Draw Square" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of a square on the canvas. The 
+     * square is drawn by clicking and dragging. The square will be drawn 
+     * staring where the mouse is clicked, then height of the square is 
+     * determined using the point where the mouse is released. The square is
+     * drawn with each side being the length of the y-coordinate difference. The 
+     * square can only be drawn if the mouse is dragged up-and-to-the-left or
+     * down-and-to-the-right of the original click.
+     * @return "Draw Square" ToggleButton to be added to the toolBar
+     */
     private ToggleButton addSquare(){
         ToggleButton square = new ToggleButton("Draw Square");
         
@@ -818,8 +899,16 @@ public class toolBar extends ToolBar{
         square.setToggleGroup(toggleGroup);
         return square;
     }
-    
-   private ToggleButton addEllipse(){
+    /**
+     * ToggleButton for "Draw Ellipse" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of an ellipse on the canvas. The 
+     * ellipse is drawn by clicking and dragging. The ellipse will be drawn within
+     * an imaginary rectangle that starts where the mouse is clicked, then goes 
+     * to the point where the mouse is released. 
+     * @return "Draw Ellipse" ToggleButton to be added to the toolBar
+     * @see addRectangle()
+     */
+    private ToggleButton addEllipse(){
        ToggleButton ellipse = new ToggleButton("Draw Ellipse");
        
        ellipse.setOnAction(new EventHandler<ActionEvent> (){
@@ -912,8 +1001,19 @@ public class toolBar extends ToolBar{
        ellipse.setToggleGroup(toggleGroup);
        return ellipse;
    }
-    
-   private ToggleButton addCircle(){
+    /**
+     * ToggleButton for "Draw Circle" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the drawing of a circle on the canvas. The 
+     * circle is drawn by clicking and dragging. The circle will be drawn in an 
+     * imaginary square that starts where the mouse is clicked, and whose side 
+     * length is determined by the y-coordinate difference between the original 
+     * click and the point where the mouse is released. Like the square, the 
+     * circle can only be drawn if the mouse is dragged up-and-to-the-left or
+     * down-and-to-the-right of the original click. 
+     * @return "Draw Rectangle" ToggleButton to be added to the toolBar
+     * @see addSquare()
+     */
+    private ToggleButton addCircle(){
         ToggleButton circle = new ToggleButton("Draw Circle");
         
         circle.setOnAction(new EventHandler<ActionEvent>() {
@@ -1065,8 +1165,14 @@ public class toolBar extends ToolBar{
         circle.setToggleGroup(toggleGroup);
         return circle;
     }
-   
-   private ToggleButton addColorGrab(){
+    /**
+     * ToggleButton for "Grab Color" is created as well as the corresponding EventHandler.
+     * The EventHandler handles the grabbing of the color where the mouse is when 
+     * it is clicked. The global color is set to this value. 
+     * @return "Grab Color" ToggleButton to be added to the toolBar
+     * @see addSquare()
+     */
+    private ToggleButton addColorGrab(){
        ToggleButton colorGrab = new ToggleButton("Grab Color");
        
        colorGrab.setOnAction(new EventHandler<ActionEvent>() {
@@ -1086,23 +1192,41 @@ public class toolBar extends ToolBar{
        colorGrab.setToggleGroup(toggleGroup);
        return colorGrab;
    }
-   
+   /**
+     * Sets the current WritableImage to a new WritableImage. The WritableImage
+     * is used in multiple methods, and should only be changed or set when necessary. 
+     * @param wim New WritableImage to be used
+     */
     public void setWim(WritableImage wim){
         this.wim = wim;
     }
-    
+    /**
+     * Sets the current Pane to a new Pane. This Pane is used primarily to save 
+     * the current image with any potential changes made to it.
+     * @param pane New Pane to be used
+     */
     public void setPane(Pane pane){
         this.pane = pane;
     }
-    
+    /**
+     * Gets the current Canvas being used by the toolBar.
+     * @return Canvas being used
+     */
     public Canvas getCanvas(){
         return canvas;
     }
-    
+    /**
+     * Gets the current WritableImage being used by the toolBar.
+     * @return Current version of the WritableImage being used
+     */
     public WritableImage getWim(){
         return wim;
     }
-    
+    /**
+     * Gets the boolean value that indicates whether or not the canvas has been
+     * drawn on. 
+     * @return true if the canvas has been drawn on.
+     */
     public Boolean beenDrawnOn(){
         return drawnOn;
     }
