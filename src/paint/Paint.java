@@ -37,7 +37,7 @@ import static paint.menuBar.drawnOn;
 import static paint.menuBar.file;
 
 /**
- *
+ * Main class that assembles the Paint application and runs it.
  * @author Francisco Vazquez
  */
 public class Paint extends Application {
@@ -149,6 +149,10 @@ public class Paint extends Application {
                             Platform.exit();
                         }
                     });
+                }
+                else{
+                    primaryStage.close();
+                    Platform.exit();
                 }
             }
         });

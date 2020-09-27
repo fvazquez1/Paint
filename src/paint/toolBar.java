@@ -81,6 +81,9 @@ public class toolBar extends ToolBar{
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int)imageView.getFitWidth()+20,(int)imageView.getFitHeight()+20);
     }
+    public toolBar(){
+        
+    }
     /**
      * ToggleButton for "Draw Line" is created as well as the corresponding EventHandler.
      * The EventHandler handles the drawing of a straight line on the canvas. 
@@ -107,6 +110,7 @@ public class toolBar extends ToolBar{
 
                     @Override
                     public void handle(MouseEvent event) {
+                        gc.setStroke(currentColor);
                         canvas.setWidth(paint.menuBar.imageView.getFitWidth());
                         canvas.setHeight(paint.menuBar.imageView.getFitHeight());
                         if (canDraw && straightLineSelected){
@@ -1182,7 +1186,9 @@ public class toolBar extends ToolBar{
                canvas.setOnMouseClicked(new EventHandler<MouseEvent>(){
                    @Override 
                    public void handle(MouseEvent event){
+                       canvas.snapshot(null, wim);
                        currentColor = wim.getPixelReader().getColor((int)event.getX(), (int)event.getY());
+                       System.out.println(currentColor);
                        colorGrabbed = true;
                        
                    }
