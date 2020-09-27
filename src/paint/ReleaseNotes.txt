@@ -1,3 +1,30 @@
+Frankie's Paint Version 5.0 - 09/26/2020
+
+New Features:
+- JavaDocumentation for everything!
+- Save image as PNG or JPG
+	- Added help and warning about image quality and how it is effected by changing file types
+- Safe Save
+	- Now fully functional with no errors.
+
+Known Issues:
+- Color Grabber does not work.
+- Undo and Redo button does not work. 
+- Shapes and Lines are not updated live.
+- Weird error in unit test
+
+Expected Next Sprint:
+- Auto-Save
+- Open multiple canvas tabs
+- Fixing Known Issues
+- Tool Tips for buttons
+- Logging Capabilities
+- Mystery Feature 
+
+Links:
+Demo: (Coming Soon)
+Github: https://github.com/fvazquez1/Paint 
+============================================================================================================================================================
 Frankie's Paint Version 4.0 - 09/21/2020
 
 New Features:
