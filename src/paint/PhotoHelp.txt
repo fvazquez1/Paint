@@ -1,0 +1,15 @@
+Memory Loss When Changing File Types
+------------------------------------
+
+JPG images use compression to save memory. This means that in the interest of 
+saving memory, there will be a loss in quality. 
+
+Converting a JPG image back to PNG will not reintroduce the already lost quality. 
+
+
+
+Here are some links to help understand this further: 
+
+https://www.andreas.com/faq-gif-png.html#:~:text=JPGs%20use%20compression%2C%20so%20the,image%2C%20the%20worse%20the%20quality.
+
+https://gamedev.stackexchange.com/questions/48304/which-image-format-is-more-memory-efficient-png-jpeg-or-gif

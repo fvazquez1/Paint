@@ -24,6 +24,8 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -66,7 +68,7 @@ public class menuBar extends MenuBar{
     static Pair<Double,Double> initialClick;
     static Stack<WritableImage> undoStack,redoStack;
     /**
-     * Constructor for menuBar object. This class extends the JavaFX object MenuBar. 
+     * Constructor for menuBar object. 
      * 
      * @param stage the Stage that the menu bar will be displayed on.
      * @throws IOException 
@@ -87,7 +89,7 @@ public class menuBar extends MenuBar{
         canvas = paint.menuBar.canvas;
         
         
-}
+    }
     /**
      * Sets up and adds the File menu to the menuBar. All MenuItems are instantiated,
      * and added to the File menu. The File Menu is then added to the menuBar. 
@@ -118,7 +120,8 @@ public class menuBar extends MenuBar{
         
         MenuItem about = addAbout();
         MenuItem toolHelp = addToolHelp();
-        mbHelp.getItems().addAll(about,toolHelp);
+        MenuItem pictureHelp = addPictureHelp();
+        mbHelp.getItems().addAll(about,toolHelp,pictureHelp);
         this.getMenus().addAll(mbHelp);
     }
     /**
@@ -136,7 +139,10 @@ public class menuBar extends MenuBar{
             public void handle(ActionEvent event) {
                 fileChooser.setTitle("Choose Image");
                 fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
+                    new FileChooser.ExtensionFilter("Image Files", "*.*"),
+                    new FileChooser.ExtensionFilter("jpg","*.jpg"),
+                    new FileChooser.ExtensionFilter("png","*png"),
+                    new FileChooser.ExtensionFilter("gif","*.gif"));
                 file = fileChooser.showOpenDialog(primaryStage);
                 try {
                     Image image = new Image(new FileInputStream(file));
@@ -164,10 +170,17 @@ public class menuBar extends MenuBar{
         saveAs.setOnAction(new EventHandler<ActionEvent>(){
             @Override // Opens a file saving window and allows user to name the file and choose the file destination
             public void handle(ActionEvent event){
+                Alert memLoss = new Alert(AlertType.WARNING);
+                memLoss.setContentText(
+                        "WARNING: Converting an image to JPG will lead to a loss in image quality. " + 
+                        "Please refer to the \"Picture Help\" located in the Help Menu for more information.");
+                memLoss.showAndWait();
+                
                 FileChooser sFileChooser = new FileChooser();
                 sFileChooser.setTitle("Save As..");
                 sFileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("*.png","*.jpg"));
+                    new FileChooser.ExtensionFilter(".png","*.png"),
+                    new FileChooser.ExtensionFilter(".jpg","*.jpg"));
                 file = sFileChooser.showSaveDialog(primaryStage);
                 if (file != null) {
                     drawnOn = paint.toolBar.drawnOn;
@@ -177,9 +190,11 @@ public class menuBar extends MenuBar{
                     try {
                         if(!drawnOn){
                             saved = true;
-                            ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"png",file);
+                            System.out.println(file);
+                            ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"jpg",file);
                         }
                         else{
+                           saved = true;
                            RenderedImage renderedImage = SwingFXUtils.fromFXImage(wim, null);
                            ImageIO.write(renderedImage, "png", file);  
                         }
@@ -208,18 +223,18 @@ public class menuBar extends MenuBar{
                 wim = paint.toolBar.wim;
                 undoStack.push(wim);
                 try {
-                        if(!drawnOn){
-                            saved = true;
-                            ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"png",file);
-                        }
-                        else{
-                           RenderedImage renderedImage = SwingFXUtils.fromFXImage(wim, null);
-                           ImageIO.write(renderedImage, "png", file);  
-                        }
-                    }    
-                    catch (Exception e) {
-                        System.out.println("Invalid selection.");
+                    if(!drawnOn){
+                        saved = true;
+                        ImageIO.write(SwingFXUtils.fromFXImage(imageView.getImage(), null),"png",file);
                     }
+                    else{
+                       RenderedImage renderedImage = SwingFXUtils.fromFXImage(wim, null);
+                       ImageIO.write(renderedImage, "png", file);  
+                    }
+                }    
+                catch (Exception e) {
+                    System.out.println("Invalid selection.");
+                }
             }
         });
         save.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
@@ -426,6 +441,39 @@ public class menuBar extends MenuBar{
         });
         about.setAccelerator(new KeyCodeCombination(KeyCode.A,KeyCombination.CONTROL_DOWN));
         return about; 
+    }
+    /**
+     * MenuItem for "Picture Help" is created as well as the corresponding EventHandler. 
+     * The EventHandler handles the opening of a separate window to display notes 
+     * on why changing the file type of an image may lead to issues. Helpful links
+     * are provided. 
+     * @return "Picture Help" MenuItem
+     * @throws IOException 
+     */
+    private MenuItem addPictureHelp() throws IOException{
+        MenuItem picHelp = new MenuItem("Picture Help");
+
+        String text = new String(Files.readAllBytes(Paths.get("C:\\Users\\Francisco Vazquez\\Documents\\cs250\\Paint\\src\\paint\\PhotoHelp.txt")) );
+        Label abtLabel = new Label(text);
+        abtLabel.setStyle(" -fx-background-color: white;");
+
+        
+        ScrollPane scroll = new ScrollPane();
+        Stage tempstage = new Stage();
+        scroll.setContent(abtLabel);
+        Scene stageScene = new Scene(scroll);
+        tempstage.setScene(stageScene);
+        tempstage.setMaxHeight(900);
+        tempstage.setTitle("File Conversion");
+        
+        picHelp.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event){
+                tempstage.show();
+            }
+        });
+        picHelp.setAccelerator(new KeyCodeCombination(KeyCode.P,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
+        return picHelp; 
     }
     /**
      * MenuItem for "How to Use Tools" is created as well as the corresponding EventHandler. 
