@@ -253,7 +253,9 @@ public class menuBar extends MenuBar{
         redo.setOnAction(new EventHandler<ActionEvent>() {
            @Override
            public void handle(ActionEvent event){
-               paint.toolBar.wim = redo();
+               //paint.toolBar.wim = redo();
+               WritableImage temp = redo();
+               imageView.setImage(temp);
            }
         });
         redo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN,KeyCombination.SHIFT_DOWN));
@@ -290,7 +292,10 @@ public class menuBar extends MenuBar{
         undo.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event){
-                paint.toolBar.wim = undo();
+                //paint.toolBar.wim = undo();
+                paint.toolBar.gc.clearRect(0, 0, 2000, 2000);
+                WritableImage temp = undo();
+                imageView.setImage(temp);
             }
         });
         undo.setAccelerator(new KeyCodeCombination(KeyCode.Z,KeyCombination.CONTROL_DOWN));
@@ -532,5 +537,9 @@ public class menuBar extends MenuBar{
      */
     public void setPane(Pane pane){
         this.pane = pane;
+    }
+    
+    public void setImageView(ImageView view){
+        imageView = view;
     }
 }

@@ -23,6 +23,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -131,14 +132,17 @@ public class toolBar extends ToolBar{
                                 gc.strokeLine(initialClick.getKey(), initialClick.getValue(), event.getX(), event.getY());
                                 pane.snapshot(null, wim);
                                 
-                                //undoStack.push(wim);
+                                paint.menuBar.undoStack.push(wim);
                             }
                         }
                 });
                 
             }
         });
-                
+        
+        
+        drawLine.setTooltip(new Tooltip("Draw a straight line"));
+        
         drawLine.setToggleGroup(toggleGroup);
         
         return drawLine;
@@ -199,13 +203,15 @@ public class toolBar extends ToolBar{
                     @Override
                     public void handle(MouseEvent event) {
                         pane.snapshot(null, wim);
-                        //undoStack.push(pane.snapshot(null, wim));
+                        paint.menuBar.undoStack.push(wim);;
                         //mb.setWim(wim);
                     }
                 });
             }
         });
 
+        freeLine.setTooltip(new Tooltip("Free-hand draw a line"));
+        
         freeLine.setToggleGroup(toggleGroup);
         
         return freeLine;
@@ -242,6 +248,9 @@ public class toolBar extends ToolBar{
                 });
             }
         });
+        
+        lineColor.setTooltip(new Tooltip("Change the line color"));
+        
         return lineColor;
     }
     /**
@@ -273,6 +282,9 @@ public class toolBar extends ToolBar{
                 });
             }
         });
+        
+        fillColor.setTooltip(new Tooltip("Change the fill color of shapes to be drawn"));
+        
         return fillColor;
     }
     /**
@@ -310,6 +322,8 @@ public class toolBar extends ToolBar{
                 });
             }
         });
+        
+        lineWidth.setTooltip(new Tooltip("Change the line width, and also the text size of inserted text"));
         
         return lineWidth;
     }
@@ -364,6 +378,8 @@ public class toolBar extends ToolBar{
                 
             }
         });
+        
+        txtBox.setTooltip(new Tooltip("Set text to be inserted. Click anywhere on canvas to insert text."));
         
         txtBox.setToggleGroup(toggleGroup);
         
@@ -467,6 +483,8 @@ public class toolBar extends ToolBar{
             }
         });
         
+        rectangle.setTooltip(new Tooltip("Draw a rectangle on the canvas"));
+        
         rectangle.setToggleGroup(toggleGroup);
         return rectangle;
     }
@@ -519,6 +537,8 @@ public class toolBar extends ToolBar{
                 });
             }
         });
+        
+        eraser.setTooltip(new Tooltip("Erase anything that has been drawn"));
         
         eraser.setToggleGroup(toggleGroup);
         return eraser;
@@ -667,6 +687,8 @@ public class toolBar extends ToolBar{
             }
         });
         
+        triangle.setTooltip(new Tooltip("Draw an isosceles triangle"));
+        
         triangle.setToggleGroup(toggleGroup);
         return triangle;
     }
@@ -757,6 +779,9 @@ public class toolBar extends ToolBar{
                 });
            }
         });
+        
+        polygon.setTooltip(new Tooltip("Draw an n-sided polygon"));
+        
         polygon.setToggleGroup(toggleGroup);
         return polygon;
     }
@@ -900,6 +925,8 @@ public class toolBar extends ToolBar{
             }
         });
         
+        square.setTooltip(new Tooltip("Draw a square"));
+        
         square.setToggleGroup(toggleGroup);
         return square;
     }
@@ -1001,6 +1028,7 @@ public class toolBar extends ToolBar{
            }
        });
        
+       ellipse.setTooltip(new Tooltip("Draw an ellipse"));
        
        ellipse.setToggleGroup(toggleGroup);
        return ellipse;
@@ -1166,6 +1194,8 @@ public class toolBar extends ToolBar{
             }
         });
         
+        circle.setTooltip(new Tooltip("Draw a circle"));
+        
         circle.setToggleGroup(toggleGroup);
         return circle;
     }
@@ -1195,6 +1225,9 @@ public class toolBar extends ToolBar{
                });
            }
        });
+       
+       colorGrab.setTooltip(new Tooltip("Grab a color from the canvas"));
+       
        colorGrab.setToggleGroup(toggleGroup);
        return colorGrab;
    }
@@ -1236,4 +1269,12 @@ public class toolBar extends ToolBar{
     public Boolean beenDrawnOn(){
         return drawnOn;
     }
+    
+    public void setCanvas(Canvas c){
+        canvas = c;
+    }
+    public void setGraphicsContext(GraphicsContext gc){
+        this.gc = gc;
+    }
+    
 }

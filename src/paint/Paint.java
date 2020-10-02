@@ -9,6 +9,10 @@ package paint;
 import java.awt.image.RenderedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -16,13 +20,19 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -41,6 +51,12 @@ import static paint.menuBar.file;
  * @author Francisco Vazquez
  */
 public class Paint extends Application {
+    int counter = 0;
+    List<WritableImage> wims = new ArrayList<>();
+    List<Canvas> canvases = new ArrayList<>();
+    List<ImageView> imgViews = new ArrayList<>();
+    List<GraphicsContext> graphicsContexts = new ArrayList<>();
+    
     @Override
     public void start(Stage primaryStage) throws FileNotFoundException, IOException{
         //Creates the menu bar
@@ -66,17 +82,125 @@ public class Paint extends Application {
                 mb.setDrawnOn(tb.beenDrawnOn());
             }
         });
+        //Adding TabPane to allow for multiple canvases
+        Tab startingTab = new Tab("WELCOME");
+        
+        String text = new String(Files.readAllBytes(Paths.get("C:\\Users\\Francisco Vazquez\\Documents\\cs250\\Paint\\src\\paint\\WelcomeTab.txt")) );
+        Label abtLabel = new Label(text);
+        //abtLabel.setStyle(" -fx-background-color: white;");
+        
+        startingTab.setContent(abtLabel);
+        
+        TabPane tabPane = new TabPane(startingTab);
+        
+        
+        
+        //Creates an extra tab to be clicked on that will allow 
+        Tab newtab = new Tab();
+        
+        EventHandler<Event> newTabEvent;
+        newTabEvent = new EventHandler<Event>() { 
+            
+            public void handle(Event e)
+            {
+                if (newtab.isSelected())
+                {
+                    
+                    // create Tab
+                    Tab tab = new Tab("Tab_" + (int)(counter));
+                    
+                    Canvas canvas = new Canvas(1220,620);
+                    canvases.add(canvas);
+
+                    tb.setCanvas(canvas);
+                    
+                    GraphicsContext gc = canvas.getGraphicsContext2D();
+                    graphicsContexts.add(gc);
+
+                    tb.setGraphicsContext(gc);
+                    
+                    WritableImage tabWim = new WritableImage(1200,600);
+                    wims.add(tabWim);
+
+                    
+                    mb.setWim(tabWim);
+                    tb.setWim(tabWim);
+                    
+                    
+                    ImageView tabImgView = new ImageView();
+                    tabImgView.setFitHeight(600);
+                    tabImgView.setFitWidth(1200);
+                    tabImgView.setPreserveRatio(true);
+                    imgViews.add(tabImgView);
+
+                    
+                    mb.setImageView(tabImgView);
+                    
+                    StackPane tabStack = new StackPane();
+                    tabStack.getChildren().addAll(mb.getImageView(),tb.getCanvas());
+                    
+                    counter++;
+                    
+                    // set content of the tab
+                    tab.setContent(tabStack);
+                    
+                    // create event handler for when an existing tab is selected
+                    
+                    EventHandler<Event> ExistingTabEvent;
+                    ExistingTabEvent = new EventHandler<Event>() { 
+
+                        public void handle(Event e)
+                        {
+                            String tabIndex = tab.getText().substring(tab.getText().length()-1);
+                            System.out.println("Tab Index: "+ tabIndex);
+                            System.out.println("Counter: " + counter);
+                            int index = Integer.parseInt(tabIndex);
+                            mb.setWim(wims.get(index));
+                            tb.setWim(wims.get(index));
+                            tb.setCanvas(canvases.get(index));
+                            mb.setImageView(imgViews.get(index));
+                            tb.setGraphicsContext(graphicsContexts.get(index));
+                        }
+                    };
+                    
+                    tab.setOnSelectionChanged(ExistingTabEvent);
+                    
+                    // add tab
+                    tabPane.getTabs().add(
+                            tabPane.getTabs().size() - 1, tab);
+                    
+                    // select the last tab
+                    tabPane.getSelectionModel().select(
+                            tabPane.getTabs().size() - 2);
+                }
+            }
+        }; 
+
+        
+        
+        
+        // set event handler to the tab 
+        newtab.setOnSelectionChanged(newTabEvent); 
+
+        // add newtab 
+        tabPane.getTabs().add(newtab); 
+        
         // Sets up canvas 
         StackPane scrollStack = new StackPane();
         stack.getChildren().addAll(mb.getImageView(),tb.getCanvas());
+        
+        //startingTab.setContent(stack);
+        
         mb.setPane(stack);
         tb.setPane(stack);
-        scroll.setContent(stack);
-        scrollStack.getChildren().add(scroll);
+        scrollStack.getChildren().add(tabPane);
+        scroll.setContent(scrollStack);
         //Adding menu bar and the canvas to the window
+        //grid.add(tabPane,0,0);
         grid.add(mb,0,0);
-        grid.addRow(1, tb);
-        grid.add(scrollStack,0,2);
+        grid.addRow(1,tb);
+        grid.addRow(2, tabPane);
+        grid.add(scrollStack,0,3);
         // Displays the window with everything that has been created
         Scene scene = new Scene(grid, 1500, 900);
         primaryStage.setTitle("Paint");
