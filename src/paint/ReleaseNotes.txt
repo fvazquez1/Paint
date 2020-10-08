@@ -1,3 +1,36 @@
+Frankie's Paint Version 6.0 - 10/07/2020
+
+New Features: 
+- Threaded Auto-Save
+	- If there is already a set file path for the current image/canvas being worked on, then it will be auto-saved every 25 seconds
+	- This feature can be turned off by going to File > Toggle Auto Save
+- Open Multiple Tabs!
+	- Any number of tabs can be opened to be painted on! Each tab can also open it's own picture!
+	- To create a new tab, just click on the blank tab next to the current tab being worked on!
+- Logging
+	- Also happening every 25 seconds, a log of what tool is being used AND what file is being worked on!
+- Tool-Tips for Every Button on the Tool Bar!
+	- Hover over any button on the tool bar for some extra help
+- Dashed Lines!
+	- Can now toggle if the line being drawn is dashed!
+
+Worthy Notes (Due to the new tab feature):
+- The safe save feature still works, but it will only prompt the user to save IF at least one image has not been saved.
+	- This means that a tab can be opened, painted on, saved, then closed, and the safe save will NOT trigger.
+- Scroll Bar Disappeared
+	- For some reason, with the new layout the scroll pane has gone missing. 
+
+Known Issues:
+- Color Grabber does not work.
+- Undo and Redo button do properly not work. 
+	- The buttons do have an effect on the canvas.
+- Shapes and Lines are not updated live.
+- Weird error in unit test
+
+Links:
+Demo: (Coming Soon)
+Github: https://github.com/fvazquez1/Paint 
+============================================================================================================================================================
 Frankie's Paint Version 5.0 - 09/26/2020
 
 New Features:
