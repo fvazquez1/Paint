@@ -2,7 +2,7 @@ How To Use Tools in the Tool Bar:
 
 ====================================================================================================
 NOTE: All buttons in the Tool Bar have the option to be toggled. All of these buttons will untoggle 
-the others, EXCEPT for "Select Line Color", "Select fill Color", and "Set Line Width".
+the others, EXCEPT for "Select Line Color", "Toggle Dashed Line", "Select fill Color", and "Set Line Width".
 ====================================================================================================
 
 TOOLS:
@@ -21,7 +21,8 @@ is dragged over will be erased. The line width will affect the eraser size.
 
 Click and drag to draw a straight line. The line will start from the original click, 
 and will go to the point where the mouse is released. Line width, and line color 
-affect the size and color of the line. 
+affect the size and color of the line. When selected, the dashed line toggle will
+affect this line. 
 
 ===================================================================================
 +----------------+
@@ -30,7 +31,20 @@ affect the size and color of the line.
 
 Click and drag to draw a line where ever the mouse goes. This works similar to how 
 writing with a pencil would work. Line width, and line color affect the size and 
-color of the line. 
+color of the line. When selected, the dashed line toggle will affect this line. 
+
+===================================================================================
++----------------+
+| Draw Rectangle |
++----------------+
+
+A rectangle will be drawn using two points. The first point is determined by the 
+coordinates of the first click. The second point is determined by where the mouse 
+is released. This means that in order to draw a rectangle the user must click and 
+drag the mouse so that the two points can be determined. These two points will be 
+diagonal from each other in the rectangle. Once the mouse is released then the 
+shape is drawn. Line width, line color, fill color and the dashed line toggle 
+affect the rectangle. 
 
 ===================================================================================
 +---------------+
@@ -46,7 +60,7 @@ The length of the final side is double whatever the difference is. For example, 
 the mouse is clicked at position (0,0), and is release at position (5,0), the final
 side will be double the difference, so 10. This third side will always be the base
 of the triangle, and will always be perfectly horizontal. Line width, line color, 
-and fill color affect the triangle. 
+fill color, and the dashed line toggle affect the triangle. 
 
 ===================================================================================
 +-------------+
@@ -57,8 +71,8 @@ In order to draw a square, the mouse must be clicked and then dragged either
 up-and-to-the-left or down-and-to-the-right. A square will be drawn with sides 
 equal to the difference in Y-position between the original click and the point 
 where the mouse is released. For example, if the mouse is clicked at (0,0), and is
-relased at (25,5), a 5-by-5 square will be drawn. Line width, line color, and fill
-color affect the square.
+relased at (25,5), a 5-by-5 square will be drawn. Line width, line color, fill
+color, and the dashed line toggle affect the square.
 
 ===================================================================================
 +--------------+
@@ -69,8 +83,8 @@ The ellipse is drawn inside of an imaginary rectangle created by the click and d
 of the mouse. The original mouse click sets the first point for the rectangle, and 
 the point where the mouse is released sets the point that is diagonally across from
 the original click. The ellipse will intersect this imaginary rectangle at the 
-midpoint of each of the four sides. Line width, line color, and fill color affect 
-the ellipse. 
+midpoint of each of the four sides. Line width, line color, fill color, and the 
+dashed line toggle affect the ellipse. 
 
 ===================================================================================
 +-------------+
@@ -80,7 +94,8 @@ the ellipse.
 The circle is drawn inside of an imaginary square (see "Draw Square"). The circle
 intersects this square at the midpoint of each of the four sides. Also like the 
 square, it can only be drawn if the mouse is dragged up-and-to-the-left or 
-down-and-to-the-right of the original click. 
+down-and-to-the-right of the original click. Line width, line color, fill color,
+and the dashed line toggle affect the circle.  
 
 ===================================================================================
 +--------------+
@@ -92,7 +107,8 @@ polygon. The pop-up window will not close unless a number is inputed. To draw th
 polygon, just click and drag like the other shapes. The polygon will be drawn upon 
 release of the drag. The length of the drag determines the "radius" of an imaginary
 circle that the polygon will be drawn in. This means the initial click will be the 
-center of the polygon.
+center of the polygon. Line width, line color, fill color, and the dashed line 
+toggle affect the polygon.  
 
 ===================================================================================
 +-------------------+
@@ -102,6 +118,15 @@ center of the polygon.
 Clicking this opens up a color-chooser. By default, the color is black. In order to
 save the chosen color, the "x" of the window must be clicked. After this, the color
 is set. The line color will affect all shapes, and both types of line drawing. 
+
+===================================================================================
++--------------------+
+| Toggle Dashed Line |
++--------------------+
+
+This button toggles a dashed line effect on all lines drawn. The dashes will appear
+even if the line width or color are changed. Even the shapes will have dashed lines.
+To turn off the dashed lines, simply untoggle this button. 
 
 ===================================================================================
 +-------------------+
