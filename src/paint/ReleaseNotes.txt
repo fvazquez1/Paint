@@ -28,7 +28,8 @@ Known Issues:
 - Weird error in unit test
 
 Links:
-Demo: (Coming Soon)
+Demo: http://youtu.be/3LBIQuIcZKI?hd=1 
+	(Uploaded on Nov. 5 -- No new features were added)
 Github: https://github.com/fvazquez1/Paint 
 ============================================================================================================================================================
 Frankie's Paint Version 5.0 - 09/26/2020
