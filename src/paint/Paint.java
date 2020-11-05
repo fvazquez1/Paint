@@ -5,6 +5,7 @@
  */
 package paint;
 
+//java. imports
 import java.awt.image.RenderedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,18 +15,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+//javafx. imports
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -34,18 +35,18 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
-
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import javax.imageio.ImageIO;
+
+//importing helpful variables
 import static paint.menuBar.drawnOn;
 import static paint.menuBar.file;
 
@@ -55,8 +56,9 @@ import static paint.menuBar.file;
  * @author Francisco Vazquez
  */
 public class Paint extends Application {
-
+    //counter will be used to keep track of tabs that are created
     int counter = 0;
+    //lists of variables used for each tab
     List<WritableImage> wims = new ArrayList<>();
     List<Canvas> canvases = new ArrayList<>();
     List<ImageView> imgViews = new ArrayList<>();
@@ -71,13 +73,13 @@ public class Paint extends Application {
         toolBar tb = new toolBar(primaryStage, mb.getImageView());
         //Creates scroll pane that will be used for the canvas
         ScrollPane scroll = new ScrollPane();
-
         scroll.setFitToHeight(true);
         scroll.setFitToWidth(true);
         // Setting up the layout of the window
         GridPane grid = new GridPane();
         StackPane stack = new StackPane();
         WritableImage wim = new WritableImage((int) mb.getImageView().getFitWidth(), (int) mb.getImageView().getFitHeight());
+        //Makes sure that the Menu Bar and the Tool Bar are using the same writable image
         mb.setWim(wim);
         tb.setWim(wim);
         //Makes sure that the writable image, and the drawn on boolean is the same for the tool bar and menu bar
@@ -91,7 +93,7 @@ public class Paint extends Application {
         //Creating the Welcome Tab that shows on open
         Tab startingTab = new Tab("WELCOME");
 
-        String text = new String(Files.readAllBytes(Paths.get("C:\\Users\\Francisco Vazquez\\Documents\\cs250\\Paint\\src\\paint\\WelcomeTab.txt")));
+        String text = new String(Files.readAllBytes(Paths.get("..\\Paint\\src\\paint\\WelcomeTab.txt")));
         Label abtLabel = new Label(text);
 
         startingTab.setContent(abtLabel);
@@ -186,14 +188,17 @@ public class Paint extends Application {
                 }
             }
         };
-
+        //Autosave handler
         EventHandler autoSaveEvent = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Checks if the canvas has been drawn on 
                 drawnOn = paint.toolBar.drawnOn;
                 WritableImage wim = paint.toolBar.wim;
-                if (paint.menuBar.autoSaveOn){
+                //Makes sure autosave is turned on (it is on by default)
+                if (paint.menuBar.autoSaveOn) {
                     try {
+                        //Saves image
                         if (!drawnOn) {
                             mb.setSaved(true);
                             ImageIO.write(SwingFXUtils.fromFXImage(paint.menuBar.imageView.getImage(), null), "png", file);
@@ -205,11 +210,11 @@ public class Paint extends Application {
                         System.out.println("Invalid selection.");
                     }
                 }
-                System.out.println(tb.getLogMessage());
+                //At the same time autosave happens, the program will log what feature is being used at that time
                 Logger.getGlobal().log(Level.FINE, tb.getLogMessage());
             }
         };
-
+        // creates an objecr that will run the autosave 
         Timeline autoSave = new Timeline(new KeyFrame(Duration.seconds(25), autoSaveEvent));
         autoSave.setCycleCount(Animation.INDEFINITE);
         autoSave.play();
@@ -247,6 +252,7 @@ public class Paint extends Application {
                 event.consume();
 
                 if (!paint.menuBar.saved) {
+                    //Creates a window that asks if the user wishes to save an unsaved canvas
                     GridPane grid = new GridPane();
                     grid.setPadding(new Insets(25, 25, 25, 25));
                     Stage tempstage = new Stage();
@@ -260,7 +266,7 @@ public class Paint extends Application {
                     button.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event) {
-
+                            //If user wishes to save, the image is saved
                             try {
                                 if (!drawnOn) {
                                     paint.menuBar.saved = true;
@@ -295,6 +301,7 @@ public class Paint extends Application {
 
                         }
                     });
+                    // Closes both the small pop-up window and the main window 
                     tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                         @Override
                         public void handle(WindowEvent event) {

@@ -14,7 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -32,7 +31,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -78,6 +76,7 @@ public class toolBar extends ToolBar {
         canDraw = false;
         this.imageView = imageView;
         toggleGroup = new ToggleGroup();
+        //adds all the buttons to the tool bar
         this.getItems().addAll(addEraser(), addDrawLine(), addFreeDrawLine(), addRectangle(),
                 addTriangle(), addSquare(), addEllipse(), addCircle(), addPolygon(),
                 addLineColor(), addDashedLine(), addFillColor(), addColorGrab(), addLineWidth(),
@@ -85,10 +84,6 @@ public class toolBar extends ToolBar {
         canvas = new Canvas(imageView.getFitWidth(), imageView.getFitHeight());
         gc = canvas.getGraphicsContext2D();
         wim = new WritableImage((int) imageView.getFitWidth() + 20, (int) imageView.getFitHeight() + 20);
-    }
-
-    public toolBar() {
-
     }
 
     /**
@@ -114,7 +109,7 @@ public class toolBar extends ToolBar {
                     canDraw = false;
                     straightLineSelected = false;
                 }
-                
+
                 //Event Handler for the canvas when this button is pressed
                 //and the mouse is pressed on the canvas. 
                 canvas.setOnMousePressed(
@@ -142,15 +137,15 @@ public class toolBar extends ToolBar {
                     public void handle(MouseEvent event) {
                         if (canDraw && straightLineSelected) {
                             gc = paint.toolBar.gc;
-                            
+
                             //Draws the line from the point where the mouse was first clicked
                             //to the current point where the mouse was released
                             gc.strokeLine(initialClick.getKey(), initialClick.getValue(), event.getX(), event.getY());
-                            
+
                             //Snapshots everything on the pane (includes canvas and image view)
                             //Snapshot is saved to wim
                             pane.snapshot(null, wim);
-                            
+
                             //Pushes the newly saved wim to the undo stack
                             paint.menuBar.undoStack.push(wim);
                         }
@@ -180,7 +175,7 @@ public class toolBar extends ToolBar {
     private ToggleButton addFreeDrawLine() {
         ToggleButton freeLine = new ToggleButton("Free Draw Line");
         freeLine.setOnAction(new EventHandler<ActionEvent>() {
-            @Override // Resets the window to show nothing
+            @Override
             public void handle(ActionEvent event) {
                 //Sets booleans that may cause potential errors
                 drawnOn = true;
@@ -192,7 +187,7 @@ public class toolBar extends ToolBar {
                 } else {
                     canDraw = false;
                 }
-                
+
                 //Event Handler for the canvas when this button is pressed
                 //and the mouse is pressed on the canvas. 
                 canvas.setOnMousePressed(
@@ -235,17 +230,17 @@ public class toolBar extends ToolBar {
                         //Snapshots everything on the pane (includes canvas and image view)
                         //Snapshot is saved to wim 
                         pane.snapshot(null, wim);
-                        
+
                         //Pushes the newly saved wim to the undo stack
                         paint.menuBar.undoStack.push(wim);;
-                        
+
                     }
                 });
             }
         });
         //Sets the tooltip for this button
         freeLine.setTooltip(new Tooltip("Free-hand draw a line"));
-        
+
         //Adding this button to the toggle group so that no other drawing tools
         //can be selected at the same time.
         freeLine.setToggleGroup(toggleGroup);
@@ -400,32 +395,31 @@ public class toolBar extends ToolBar {
                 canDraw = false;
                 shapeSelected = false;
                 straightLineSelected = false;
-
+                //Sets up a window so text can be written by the user
                 Stage tempstage = new Stage();
                 tempstage.setTitle("Text To Be Written");
-
                 TextArea textArea = new TextArea();
                 VBox vbox = new VBox(textArea);
-
                 Scene stageScene = new Scene(vbox);
                 tempstage.setScene(stageScene);
-
                 tempstage.show();
-
+                // text is set when the pop-up window is closed
                 tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                     @Override
                     public void handle(WindowEvent event) {
                         currentText = textArea.getText();
                     }
                 });
-
+                // text is printed on the canvas where ever the mouse is clicked on the canvas
                 canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //canvas is resized if needed
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
+                        // the coordinates of the click are saved
                         initialClick = new Pair(event.getX(), event.getY());
-
+                        // color and size are set. Then the text is printed 
                         gc.setStroke(currentColor);
                         gc.setFont(Font.font(currentWidth + 12));
                         gc.strokeText(currentText, initialClick.getKey(), initialClick.getValue());
@@ -434,9 +428,10 @@ public class toolBar extends ToolBar {
 
             }
         });
-
+        //sets the tool tip for this button
         txtBox.setTooltip(new Tooltip("Set text to be inserted. Click anywhere on canvas to insert text."));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         txtBox.setToggleGroup(toggleGroup);
 
         return txtBox;
@@ -457,40 +452,46 @@ public class toolBar extends ToolBar {
         rectangle.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 canDraw = true;
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "rect";
                 eraserSelected = false;
+                //the following triggers on the first mouse press
                 canvas.setOnMousePressed(
                         new EventHandler<MouseEvent>() {
 
                     @Override
                     public void handle(MouseEvent event) {
+                        //canvas is resized if needed
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
+                        //saves the coordinates of where the mouse was pressed on the canvas
                         if (canDraw && !straightLineSelected && shapeSelected) {
                             initialClick = new Pair(event.getX(), event.getY());
                         }
                     }
                 });
-
+                //the following triggers when the mouse is released after the initial press
                 canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
                         new EventHandler<MouseEvent>() {
 
                     @Override
                     public void handle(MouseEvent event) {
                         if (canDraw && !straightLineSelected && shapeSelected && currentShape == "rect") {
+                            //sets cosmetic values such as line width and color
                             gc.setLineWidth(currentWidth);
                             gc.setStroke(currentColor);
                             gc.setFill(currentFillColor);
+                            //handler if the mouse is released anywhere up and/or to the right of the initial mouse press
                             if ((event.getX() - initialClick.getKey() >= 0.0) && (event.getY() - initialClick.getValue() >= 0.0)) {
                                 if (currentFillColor != null) {
                                     gc.fillRect(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                 } else {
                                     gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                 }
-                            } else {
+                            } else {//handler if the mouse is released anywhere up and/or to the left of the initial mouse press
                                 if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() >= 0)) {
                                     double originalX = initialClick.getKey();
                                     double originalY = initialClick.getValue();
@@ -500,7 +501,7 @@ public class toolBar extends ToolBar {
                                     } else {
                                         gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (originalX - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                     }
-                                } else {
+                                } else { //handler if the mouse is released anywhere down and/or to the right of the initial mouse press
                                     if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() < 0)) {
                                         double originalX = initialClick.getKey();
                                         double originalY = initialClick.getValue();
@@ -510,7 +511,7 @@ public class toolBar extends ToolBar {
                                         } else {
                                             gc.strokeRect(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (originalY - initialClick.getValue()));
                                         }
-                                    } else {
+                                    } else {//handler if the mouse is released anywhere down and/or to the left of the initial mouse press
                                         if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() < 0)) {
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
@@ -526,16 +527,19 @@ public class toolBar extends ToolBar {
                             }
 
                         }
+                        //saves the new additions to the current wim
                         pane.snapshot(null, wim);
-                        //undoStack.push(wim);
+                        //Pushes the newly saved wim to the undo stack
+                        paint.menuBar.undoStack.push(wim);;
                     }
                 });
 
             }
         });
-
+        //sets the tool tip for this button
         rectangle.setTooltip(new Tooltip("Draw a rectangle on the canvas"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         rectangle.setToggleGroup(toggleGroup);
         return rectangle;
     }
@@ -554,46 +558,55 @@ public class toolBar extends ToolBar {
         eraser.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 drawnOn = true;
                 straightLineSelected = false;
                 shapeSelected = false;
                 eraserSelected = true;
                 canDraw = false;
+                //the following triggers when the mouse is pressed
                 canvas.setOnMousePressed(
                         new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
                         if (eraserSelected) {
+                            //erases anything that has been drawn at the point where the mouse was clicked
                             gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
                         }
                     }
                 });
-
+                //the following is triggered when the mouse is pressed and is in the process of being dragged
                 canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
                         new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
                         if (eraserSelected) {
+                            //erases at the point where the mouse is currently at
                             gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
                         }
                     }
                 });
-
+                //the following is triggered when the mouse is released after being pressed
                 canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //erases at the point where the mouse is currently at
                         gc.clearRect(event.getX(), event.getY(), currentWidth, currentWidth);
+                        //saves the edited canvas to the wim
                         pane.snapshot(null, wim);
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         eraser.setTooltip(new Tooltip("Erase anything that has been drawn"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         eraser.setToggleGroup(toggleGroup);
+
         return eraser;
     }
 
@@ -614,43 +627,51 @@ public class toolBar extends ToolBar {
         triangle.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 canDraw = true;
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "tri";
                 eraserSelected = false;
+                //the following triggers when the mouse is pressed
                 canvas.setOnMousePressed(
                         new EventHandler<MouseEvent>() {
 
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
+                        //sets cosmetic variables
                         gc.setLineWidth(currentWidth);
                         gc.setStroke(currentColor);
                         gc.setFill(currentFillColor);
 
                         if (canDraw && !straightLineSelected && shapeSelected) {
+                            //saves the coordinates of where the mouse was pressed on the canvas
                             initialClick = new Pair(event.getX(), event.getY());
                         }
 
                     }
                 });
-
+                //the following triggers when the mouse is released after the initial press
                 canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //handler if the mouse is released anywhere up and/or to the right of the initial mouse press
                         if ((event.getX() - initialClick.getKey() >= 0.0) && (event.getY() - initialClick.getValue() >= 0.0)) {
+                            //calculates the side length using the current x value and the initial x value
                             double sideLength = event.getX() - initialClick.getKey();
+                            //creates an array to store the x and y coordinates
                             double[] xPoints = new double[3];
                             double[] yPoints = new double[3];
-
+                            //first point is the initial click
                             xPoints[0] = initialClick.getKey();
                             yPoints[0] = initialClick.getValue();
-
+                            //second point is the mouse's current position
                             xPoints[1] = event.getX();
                             yPoints[1] = event.getY();
-
+                            //calculate the final point using the sideLength
                             xPoints[2] = (event.getX() - (2 * (sideLength)));
                             yPoints[2] = event.getY();
                             if (currentShape == "tri") {
@@ -660,19 +681,20 @@ public class toolBar extends ToolBar {
                                     gc.strokePolygon(xPoints, yPoints, 3);
                                 }
                             }
-                        } else {
+                        } else {//handler if the mouse is released anywhere up and/or to the left of the initial mouse press
                             if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() >= 0)) {
-
+                                //calculates the side length using the current x value and the initial x value
                                 double sideLength = initialClick.getKey() - event.getX();
+                                //creates an array to store the x and y coordinates
                                 double[] xPoints = new double[3];
                                 double[] yPoints = new double[3];
-
+                                //first point is the initial click
                                 xPoints[0] = initialClick.getKey();
                                 yPoints[0] = initialClick.getValue();
-
+                                //second point is the mouse's current position
                                 xPoints[1] = event.getX();
                                 yPoints[1] = event.getY();
-
+                                //calculate the final point using the sideLength
                                 xPoints[2] = (event.getX() + (2 * (sideLength)));
                                 yPoints[2] = event.getY();
                                 if (currentShape == "tri") {
@@ -682,18 +704,20 @@ public class toolBar extends ToolBar {
                                         gc.strokePolygon(xPoints, yPoints, 3);
                                     }
                                 }
-                            } else {
+                            } else {//handler if the mouse is released anywhere down and/or to the right of the initial mouse press
                                 if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() < 0)) {
+                                    //calculates the side length using the current x value and the initial x value
                                     double sideLength = event.getX() - initialClick.getKey();
+                                    //creates an array to store the x and y coordinates
                                     double[] xPoints = new double[3];
                                     double[] yPoints = new double[3];
-
+                                    //first point is the initial click
                                     xPoints[0] = initialClick.getKey();
                                     yPoints[0] = initialClick.getValue();
-
+                                    //second point is the mouse's current position
                                     xPoints[1] = event.getX();
                                     yPoints[1] = event.getY();
-
+                                    //calculate the final point using the sideLength
                                     xPoints[2] = (initialClick.getKey() + (2 * (sideLength)));
                                     yPoints[2] = initialClick.getValue();
                                     if (currentShape == "tri") {
@@ -703,18 +727,20 @@ public class toolBar extends ToolBar {
                                             gc.strokePolygon(xPoints, yPoints, 3);
                                         }
                                     }
-                                } else {
+                                } else {//handler if the mouse is released anywhere down and/or to the left of the initial mouse press
                                     if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() < 0)) {
+                                        //calculates the side length using the current x value and the initial x value
                                         double sideLength = initialClick.getKey() - event.getX();
+                                        //creates an array to store the x and y coordinates
                                         double[] xPoints = new double[3];
                                         double[] yPoints = new double[3];
-
+                                        //first point is the initial click
                                         xPoints[0] = initialClick.getKey();
                                         yPoints[0] = initialClick.getValue();
-
+                                        //second point is the mouse's current position
                                         xPoints[1] = event.getX();
                                         yPoints[1] = event.getY();
-
+                                        //calculate the final point using the sideLength
                                         xPoints[2] = (initialClick.getKey() - (2 * (sideLength)));
                                         yPoints[2] = initialClick.getValue();
                                         if (currentShape == "tri") {
@@ -728,44 +754,46 @@ public class toolBar extends ToolBar {
                                 }
                             }
                         }
-
+                        //saves the edited canvas to the wim
                         pane.snapshot(null, wim);
                     }
                 });
 
             }
         });
-
+        //sets the tool tip for this button
         triangle.setTooltip(new Tooltip("Draw an isosceles triangle"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         triangle.setToggleGroup(toggleGroup);
+
         return triangle;
     }
 
     /**
-     * ToggleButton for "Toggle Dashed Line" is created as well as the corresponding
-     * EventHandler. The EventHandler handles the setting of the dash for the 
-     * line based on the current line width. 
+     * ToggleButton for "Toggle Dashed Line" is created as well as the
+     * corresponding EventHandler. The EventHandler handles the setting of the
+     * dash for the line based on the current line width.
      *
      * @return "Toggle Dashed Line" ToggleButton to be added to the toolBar
      */
     public ToggleButton addDashedLine() {
         ToggleButton dashedLine = new ToggleButton("Toggle Dashed Line");
-        
+        //triggers when the button is pressed
         dashedLine.setOnAction(new EventHandler<ActionEvent>() {
-            
+
             @Override
-            public void handle(ActionEvent event){
-                if(dashedLine.isSelected()){
-                    gc.setLineDashes(5+currentWidth);
-                }
-                else{
+            public void handle(ActionEvent event) {
+                if (dashedLine.isSelected()) {
+                    gc.setLineDashes(5 + currentWidth);
+                } else {
                     gc.setLineDashes(0);
                 }
             }
         });
         return dashedLine;
     }
+
     /**
      * ToggleButton for "Draw Polygon" is created as well as the corresponding
      * EventHandler. The EventHandler handles the drawing of a n-sided polygon
@@ -783,6 +811,7 @@ public class toolBar extends ToolBar {
 
             @Override
             public void handle(ActionEvent event) {
+                //Opens a window to allow for the user to input the number of sides
                 Stage tempstage = new Stage();
                 tempstage.setTitle("Draw Polygon");
 
@@ -801,63 +830,66 @@ public class toolBar extends ToolBar {
                 tempstage.setScene(stageScene);
 
                 tempstage.show();
-
+                //the number of sides is saved when the pop-up window is closed
                 tempstage.setOnCloseRequest(new EventHandler<WindowEvent>() {
 
                     @Override
                     public void handle(WindowEvent event) {
                         nSides = new Integer(n_field.getText());
-                        System.out.println(nSides);
                     }
                 });
-
+                //Sets booleans that may cause errors
                 canDraw = true;
                 straightLineSelected = false;
                 shapeSelected = true;
                 currentShape = "poly";
-
+                //the following triggers when the mouse is pressed
                 canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
+                        //sets cosmetic variables
                         gc.setLineWidth(currentWidth);
                         gc.setStroke(currentColor);
                         gc.setFill(currentFillColor);
-
+                        //saves the coordinates of where the mouse was pressed on the canvas
                         initialClick = new Pair(event.getX(), event.getY());
-                        System.out.println(initialClick);
-
                     }
                 });
-
+                //the following triggers when the mouse is released after the initial press
                 canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //sets the center of the polygon to the initial click
                         double centerX = initialClick.getKey();
                         double centerY = initialClick.getValue();
-
+                        //radius is calculated using the center x value and the current x value
                         double radius = event.getX() - centerX;
-
+                        //creates an array to store the x and y coordinates
                         double[] xPoints = new double[nSides];
                         double[] yPoints = new double[nSides];
-
+                        //coordinates for each point are calculated
                         for (int i = 0; i < nSides; i++) {
                             xPoints[i] = (centerX + (radius * Math.cos(2 * Math.PI * i / nSides)));
                             yPoints[i] = (centerY + (radius * Math.sin(2 * Math.PI * i / nSides)));
                             System.out.println("Point" + i + ": " + xPoints[i] + " " + yPoints[i]);
                         }
                         if (canDraw && shapeSelected && currentShape == "poly") {
+                            //polygon is drawn
                             gc.strokePolygon(xPoints, yPoints, nSides);
                         }
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         polygon.setTooltip(new Tooltip("Draw an n-sided polygon"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         polygon.setToggleGroup(toggleGroup);
+
         return polygon;
     }
 
@@ -879,32 +911,36 @@ public class toolBar extends ToolBar {
         square.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 canDraw = true;
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "square";
-                canvas.setOnMousePressed(
-                        new EventHandler<MouseEvent>() {
-
+                //the following triggers when the mouse is pressed
+                canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
                         if (canDraw && !straightLineSelected && shapeSelected) {
+                            //saves the coordinates of where the mouse was pressed on the canvas
                             initialClick = new Pair(event.getX(), event.getY());
                         }
                     }
                 });
-                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
-                        new EventHandler<MouseEvent>() {
-
+                //the following triggers when the mouse is released after the initial press
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
                         if (canDraw && !straightLineSelected && shapeSelected && currentShape == "square") {
+                            //sets cosmetic variables
                             gc.setLineWidth(currentWidth);
                             gc.setStroke(currentColor);
                             gc.setFill(currentFillColor);
+                            //handler if the mouse is released anywhere up and/or to the right of the initial mouse press
                             if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() >= 0)) {
+                                //Checks whether to determine side length with x length or y length
                                 if ((event.getX() - initialClick.getKey()) > (event.getY() - initialClick.getValue())) {
                                     double lesser = event.getY() - initialClick.getValue();
                                     if (currentFillColor != null) {
@@ -920,7 +956,7 @@ public class toolBar extends ToolBar {
                                         gc.strokeRect(initialClick.getKey(), initialClick.getValue(), lesser, lesser);
                                     }
                                 }
-                            } else {
+                            } else {//handler if the mouse is released anywhere up and/or to the left of the initial mouse press
                                 if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() >= 0)) {
                                     double originalX = initialClick.getKey();
                                     double originalY = initialClick.getValue();
@@ -941,7 +977,7 @@ public class toolBar extends ToolBar {
                                             gc.strokeRect(event.getX(), event.getY(), height, height);
                                         }
                                     }
-                                } else {
+                                } else {//handler if the mouse is released anywhere down and/or to the right of the initial mouse press
                                     if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() < 0)) {
                                         double originalX = initialClick.getKey();
                                         double originalY = initialClick.getValue();
@@ -962,7 +998,7 @@ public class toolBar extends ToolBar {
                                                 gc.strokeRect(initialClick.getKey(), initialClick.getValue(), height, height);
                                             }
                                         }
-                                    } else {
+                                    } else {//handler if the mouse is released anywhere down and/or to the left of the initial mouse press
                                         if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() < 0)) {
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
@@ -982,16 +1018,18 @@ public class toolBar extends ToolBar {
 
                             initialClick = new Pair(0, 0);
                         }
+                        //saves the edited canvas to the wim
                         pane.snapshot(null, wim);
-                        //undoStack.push(wim);
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         square.setTooltip(new Tooltip("Draw a square"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         square.setToggleGroup(toggleGroup);
+        
         return square;
     }
 
@@ -1011,40 +1049,41 @@ public class toolBar extends ToolBar {
         ellipse.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 canDraw = true;
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "ellipse";
-
-                canvas.setOnMousePressed(
-                        new EventHandler<MouseEvent>() {
-
+                //the following triggers when the mouse is pressed
+                canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
                         if (canDraw && !straightLineSelected && shapeSelected) {
+                            //saves the coordinates of where the mouse was pressed on the canvas
                             initialClick = new Pair(event.getX(), event.getY());
                         }
                     }
                 });
-
-                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
-                        new EventHandler<MouseEvent>() {
-
+                //the following triggers when the mouse is released after the initial press
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
                         if (canDraw && !straightLineSelected && shapeSelected && currentShape == "ellipse") {
+                            //sets cosmetic variables
                             gc.setLineWidth(currentWidth);
                             gc.setStroke(currentColor);
                             gc.setFill(currentFillColor);
+                            //handler if the mouse is released anywhere up and/or to the right of the initial mouse press
                             if ((event.getX() - initialClick.getKey() >= 0.0) && (event.getY() - initialClick.getValue() >= 0.0)) {
                                 if (currentFillColor != null) {
                                     gc.fillOval(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                 } else {
                                     gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                 }
-                            } else {
+                            } else {//handler if the mouse is released anywhere up and/or to the left of the initial mouse press
                                 if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() >= 0)) {
                                     double originalX = initialClick.getKey();
                                     double originalY = initialClick.getValue();
@@ -1054,7 +1093,7 @@ public class toolBar extends ToolBar {
                                     } else {
                                         gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (originalX - initialClick.getKey()), (event.getY() - initialClick.getValue()));
                                     }
-                                } else {
+                                } else {//handler if the mouse is released anywhere down and/or to the right of the initial mouse press
                                     if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() < 0)) {
                                         double originalX = initialClick.getKey();
                                         double originalY = initialClick.getValue();
@@ -1064,7 +1103,7 @@ public class toolBar extends ToolBar {
                                         } else {
                                             gc.strokeOval(initialClick.getKey(), initialClick.getValue(), (event.getX() - initialClick.getKey()), (originalY - initialClick.getValue()));
                                         }
-                                    } else {
+                                    } else {//handler if the mouse is released anywhere down and/or to the left of the initial mouse press
                                         if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() < 0)) {
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
@@ -1080,16 +1119,18 @@ public class toolBar extends ToolBar {
                             }
 
                         }
+                        //saves the edited canvas to the wim
                         pane.snapshot(null, wim);
-                        //undoStack.push(wim);
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         ellipse.setTooltip(new Tooltip("Draw an ellipse"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         ellipse.setToggleGroup(toggleGroup);
+        
         return ellipse;
     }
 
@@ -1112,31 +1153,32 @@ public class toolBar extends ToolBar {
         circle.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets booleans that may cause errors
                 canDraw = true;
                 shapeSelected = true;
                 straightLineSelected = false;
                 currentShape = "circle";
-                canvas.setOnMousePressed(
-                        new EventHandler<MouseEvent>() {
-
+                canvas.setOnMousePressed( new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //resizes the canvas if necessary
                         canvas.setWidth(imageView.getFitWidth());
                         canvas.setHeight(imageView.getFitHeight());
                         if (canDraw && !straightLineSelected && shapeSelected) {
+                            //saves the coordinates of where the mouse was pressed on the canvas
                             initialClick = new Pair(event.getX(), event.getY());
                         }
                     }
                 });
-                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
-                        new EventHandler<MouseEvent>() {
-
+                canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
                         if (canDraw && !straightLineSelected && shapeSelected && currentShape == "circle") {
+                            //sets cosmetic variables
                             gc.setLineWidth(currentWidth);
                             gc.setStroke(currentColor);
                             gc.setFill(currentFillColor);
+                            //handler if the mouse is released anywhere up and/or to the right of the initial mouse press
                             if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() >= 0)) {
                                 if ((event.getX() - initialClick.getKey()) > (event.getY() - initialClick.getValue())) {
                                     double lesser = event.getY() - initialClick.getValue();
@@ -1157,7 +1199,7 @@ public class toolBar extends ToolBar {
                                         }
                                     }
                                 }
-                            } else {
+                            } else {//handler if the mouse is released anywhere up and/or to the left of the initial mouse press
                                 if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() >= 0)) {
                                     double originalX = initialClick.getKey();
                                     double originalY = initialClick.getValue();
@@ -1182,7 +1224,7 @@ public class toolBar extends ToolBar {
                                             }
                                         }
                                     }
-                                } else {
+                                } else {//handler if the mouse is released anywhere down and/or to the right of the initial mouse press
                                     if ((event.getX() - initialClick.getKey() >= 0) && (event.getY() - initialClick.getValue() < 0)) {
                                         double originalX = initialClick.getKey();
                                         double originalY = initialClick.getValue();
@@ -1204,7 +1246,7 @@ public class toolBar extends ToolBar {
                                                 }
                                             }
                                         }
-                                    } else {
+                                    } else {//handler if the mouse is released anywhere down and/or to the left of the initial mouse press
                                         if ((event.getX() - initialClick.getKey() < 0) && (event.getY() - initialClick.getValue() < 0)) {
                                             double originalX = initialClick.getKey();
                                             double originalY = initialClick.getValue();
@@ -1233,16 +1275,18 @@ public class toolBar extends ToolBar {
 
                             initialClick = new Pair(0, 0);
                         }
+                        //saves the edited canvas to the wim
                         pane.snapshot(null, wim);
-                        //undoStack.push(wim);
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         circle.setTooltip(new Tooltip("Draw a circle"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         circle.setToggleGroup(toggleGroup);
+        
         return circle;
     }
 
@@ -1260,23 +1304,26 @@ public class toolBar extends ToolBar {
         colorGrab.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                //Sets a boolean that may cause errors
                 canDraw = false;
                 canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
+                        //saves the canvas to the wim
                         canvas.snapshot(null, wim);
+                        //sets the color to whatever the color is at the position of the mouse
                         currentColor = wim.getPixelReader().getColor((int) event.getX(), (int) event.getY());
-                        System.out.println(currentColor);
                         colorGrabbed = true;
-
                     }
                 });
             }
         });
-
+        //sets the tool tip for this button
         colorGrab.setTooltip(new Tooltip("Grab a color from the canvas"));
-
+        //Adding this button to the toggle group so that no other drawing tools
+        //can be selected at the same time.
         colorGrab.setToggleGroup(toggleGroup);
+        
         return colorGrab;
     }
 
@@ -1328,42 +1375,47 @@ public class toolBar extends ToolBar {
     public Boolean beenDrawnOn() {
         return drawnOn;
     }
+
     /**
      * Sets the canvas of the current toolBar to the inputed Canvas c
+     *
      * @param c New canvas to be worked on by the toolBar
      */
     public void setCanvas(Canvas c) {
         canvas = c;
     }
+
     /**
      * Sets the graphics context of the current toolBar to the inputed Graphics
-     * Context gc. This method should be used when the Canvas is changed. Setting
-     * the new graphics context to be that of the new Canvas. 
-     * 
+     * Context gc. This method should be used when the Canvas is changed.
+     * Setting the new graphics context to be that of the new Canvas.
+     *
      * @param gc New graphics context to be used by the toolBar.
      */
     public void setGraphicsContext(GraphicsContext gc) {
         this.gc = gc;
     }
+
     /**
-     * Gets the message that will be logged that tells the user what the current tool being used
-     * is as well as telling the user what the current file being worked on is. 
-     * This is only meant to be used for logging. 
-     * 
+     * Gets the message that will be logged that tells the user what the current
+     * tool being used is as well as telling the user what the current file
+     * being worked on is. This is only meant to be used for logging.
+     *
      * @return logMessage - The message to be logged
      */
     public String getLogMessage() {
         String logMessage = "";
+        //Log message contains the current opened file (if there is one)
+        //as well as the current tool selected.
         if (paint.menuBar.file != null) {
             logMessage = "Current Tool Selected: " + toggleGroup.getSelectedToggle().toString()
                     + "\n "
                     + "Current File: " + paint.menuBar.file.getAbsolutePath();
         } else {
-            if(toggleGroup.getSelectedToggle() == null){
-                logMessage = "Current Tool Selected: NONE" + 
-                        "\n Current File: Unsaved";
-            }
-            else{
+            if (toggleGroup.getSelectedToggle() == null) {
+                logMessage = "Current Tool Selected: NONE"
+                        + "\n Current File: Unsaved";
+            } else {
                 logMessage = "Current Tool Selected: " + toggleGroup.getSelectedToggle().toString()
                         + "\n Current File: Unsaved";
             }
